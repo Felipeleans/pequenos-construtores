@@ -286,3 +286,11 @@ html[data-theme="escuro"] .team-account-actions .remove-child-button{border-colo
 @media(max-width:520px){.team-account-actions{gap:5px}.team-account-actions button{height:30px;min-width:64px;padding:0 8px;font-size:9px}}
 .team-account-actions .team-role{display:inline-flex;align-items:center;justify-content:center;box-sizing:border-box;width:76px;min-width:76px;height:34px;padding:0 8px;border-radius:8px;font:700 10px 'DM Sans',sans-serif;white-space:nowrap}
 @media(max-width:520px){.team-account-actions button,.team-account-actions .team-role{width:68px;min-width:68px;height:32px;padding:0 6px;font-size:9px}}
+.child-row-actions{grid-column:1/-1;display:flex;justify-content:flex-end;align-items:center;gap:8px;padding-top:2px}
+.child-row-actions button{display:inline-flex;align-items:center;justify-content:center;box-sizing:border-box;width:88px;height:32px;margin:0;padding:0 8px;border:1px solid #8d6158;border-radius:8px;background:#f8efed;color:#825044;font:700 10px 'DM Sans',sans-serif;cursor:pointer;white-space:nowrap}
+.child-row-actions .child-roster-action{border-color:#748c70;background:#eef4ea;color:#365b3e}
+.child-row-actions button:hover{filter:brightness(.96)}
+.child-row-actions .delete-child-button{border-color:#8d6158;background:#f8efed;color:#825044}
+html[data-theme="escuro"] .child-row-actions .child-roster-action{border-color:#526b4d;background:#303b30;color:#d7e6d2}
+html[data-theme="escuro"] .child-row-actions .delete-child-button{border-color:#76524c;background:#352524;color:#efb2a8}
+@media(max-width:520px){.child-row-actions{gap:6px}.child-row-actions button{width:80px;height:30px;font-size:9px}}

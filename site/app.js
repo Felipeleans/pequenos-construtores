@@ -498,7 +498,7 @@ function renderizarCadastroCriancas() {
   const alternar = document.querySelector("#toggle-archived-children");
   alternar.textContent = mostrarCriancasArquivadas ? "Ver crianças ativas" : `Ver arquivadas (${CRIANCAS.filter(crianca => crianca.arquivada).length})`;
   alternar.setAttribute("aria-pressed", String(mostrarCriancasArquivadas));
-  editor.innerHTML = exibidas.length ? exibidas.map(crianca => `<div class="child-edit-row ${crianca.nova ? "new-child-row" : ""} ${crianca.arquivada ? "archived-child-row" : ""}"><span class="child-edit-number">#${crianca.id.slice(-2)}</span><label class="child-name-field"><span>Nome</span><input type="text" maxlength="70" data-child-name="${crianca.id}" value="${escapar(crianca.nome)}" placeholder="Nome da criança"></label><label class="child-age-field"><span>Idade</span><select data-child-age="${crianca.id}"><option value="" disabled ${crianca.idade ? "" : "selected"}>Selecione</option>${Array.from({ length: 7 }, (_, i) => `<option value="${i + 6}" ${crianca.idade === i + 6 ? "selected" : ""}>${i + 6} anos</option>`).join("")}</select></label><label class="child-church-field"><span>Igreja</span><input type="text" maxlength="100" data-child-church="${crianca.id}" value="${escapar(crianca.igreja)}" placeholder="Nome da igreja"></label><label class="child-category-field"><span>Categoria representativa</span><select data-child-category="${crianca.id}"><option value="">Sem categoria</option>${CATEGORIAS.map(categoria => `<option value="${categoria.id}" ${crianca.categoriaRepresentativa === categoria.id ? "selected" : ""}>${categoria.nome}</option>`).join("")}</select></label>${crianca.nova ? `<button type="button" class="remove-child-button" data-remove-child="${crianca.id}">Cancelar</button>` : crianca.arquivada ? `<button type="button" class="secondary-button child-roster-action" data-restore-child="${crianca.id}">Restaurar</button>` : `<button type="button" class="remove-child-button child-roster-action" data-archive-child="${crianca.id}">Arquivar</button>`}</div>`).join("") : `<div class="empty-state"><span aria-hidden="true">♙</span><p>${mostrarCriancasArquivadas ? "Nenhuma criança arquivada." : "Nenhuma criança ativa cadastrada ainda. Use “Adicionar criança” para começar."}</p></div>`;
+  editor.innerHTML = exibidas.length ? exibidas.map(crianca => `<div class="child-edit-row ${crianca.nova ? "new-child-row" : ""} ${crianca.arquivada ? "archived-child-row" : ""}"><span class="child-edit-number">#${crianca.id.slice(-2)}</span><label class="child-name-field"><span>Nome</span><input type="text" maxlength="70" data-child-name="${crianca.id}" value="${escapar(crianca.nome)}" placeholder="Nome da criança"></label><label class="child-age-field"><span>Idade</span><select data-child-age="${crianca.id}"><option value="" disabled ${crianca.idade ? "" : "selected"}>Selecione</option>${Array.from({ length: 7 }, (_, i) => `<option value="${i + 6}" ${crianca.idade === i + 6 ? "selected" : ""}>${i + 6} anos</option>`).join("")}</select></label><label class="child-church-field"><span>Igreja</span><input type="text" maxlength="100" data-child-church="${crianca.id}" value="${escapar(crianca.igreja)}" placeholder="Nome da igreja"></label><label class="child-category-field"><span>Categoria representativa</span><select data-child-category="${crianca.id}"><option value="">Sem categoria</option>${CATEGORIAS.map(categoria => `<option value="${categoria.id}" ${crianca.categoriaRepresentativa === categoria.id ? "selected" : ""}>${categoria.nome}</option>`).join("")}</select></label>${crianca.nova ? `<button type="button" class="remove-child-button" data-remove-child="${crianca.id}">Cancelar</button>` : `<div class="child-row-actions">${crianca.arquivada ? `<button type="button" class="secondary-button child-roster-action" data-restore-child="${crianca.id}">Restaurar</button>` : `<button type="button" class="remove-child-button child-roster-action" data-archive-child="${crianca.id}">Arquivar</button>`}<button type="button" class="delete-child-button" data-delete-child="${crianca.id}" aria-label="Excluir definitivamente ${escapar(nomeCrianca(crianca))}">Excluir</button></div>`}</div>`).join("") : `<div class="empty-state"><span aria-hidden="true">♙</span><p>${mostrarCriancasArquivadas ? "Nenhuma criança arquivada." : "Nenhuma criança ativa cadastrada ainda. Use “Adicionar criança” para começar."}</p></div>`;
   document.querySelectorAll("[data-child-church]").forEach(campo => campo.setAttribute("list", "church-options"));
   renderizarListaIgrejas();
   document.querySelector("#add-child").disabled = CRIANCAS.filter(crianca => !crianca.arquivada).length >= LIMITE_CRIANCAS;
@@ -533,6 +533,36 @@ function definirArquivoCrianca(id, arquivada) {
     renderizarCadastroCriancas(); renderizarPodio(); renderizarProgresso(document.querySelector("#progress-search").value);
     document.querySelector("#children-feedback").textContent = arquivada ? `${nomeCrianca(crianca)} foi arquivada. O histórico foi mantido.` : `${nomeCrianca(crianca)} voltou à lista ativa.`;
   } catch { crianca.arquivada = !arquivada; document.querySelector("#children-feedback").textContent = "Não foi possível atualizar o cadastro neste aparelho."; }
+}
+function excluirCriancaDefinitivamente(id) {
+  const crianca = CRIANCAS.find(item => item.id === id && !item.nova);
+  if (!crianca) return;
+  const totalRegistros = registros.filter(item => item.criancaId === id).length;
+  const totalExtras = pontosExtras.filter(item => item.criancaId === id).length;
+  const confirmacao = `Excluir definitivamente ${nomeCrianca(crianca)}? O cadastro, ${totalRegistros} registro(s) de missão e ${totalExtras} concessão(ões) de pontos extras serão apagados deste aparelho e dos aparelhos sincronizados. Esta ação não pode ser desfeita.`;
+  if (!window.confirm(confirmacao)) return;
+  const anteriores = { children: CRIANCAS, records: registros, bonus: pontosExtras };
+  const persistir = (criancas, registrosNovos, extrasNovos) => {
+    localStorage.setItem(CHAVE_CRIANCAS, JSON.stringify(criancas));
+    localStorage.setItem(CHAVE, JSON.stringify(registrosNovos));
+    localStorage.setItem(CHAVE_PONTOS_EXTRAS, JSON.stringify(extrasNovos));
+  };
+  const criancasNovas = CRIANCAS.filter(item => item.id !== id).map(({ nova, ...item }) => item);
+  const registrosNovos = registros.filter(item => item.criancaId !== id);
+  const extrasNovos = pontosExtras.filter(item => item.criancaId !== id);
+  try {
+    persistir(criancasNovas, registrosNovos, extrasNovos);
+    CRIANCAS = criancasNovas; registros = registrosNovos; pontosExtras = extrasNovos;
+    agendarSincronizacao();
+    if (criancaSelecionada === id) cancelarEdicaoRegistro("Criança excluída.");
+    renderizarCadastroCriancas(); renderizarCriancas(document.querySelector("#child-search").value);
+    renderizarResumo(); renderizarRegistros(); renderizarProgresso(); renderizarPodio(); renderizarHome();
+    document.querySelector("#children-feedback").textContent = `Cadastro de ${nomeCrianca(crianca)} e seus registros excluídos definitivamente.`;
+  } catch {
+    try { persistir(anteriores.children, anteriores.records, anteriores.bonus); } catch {}
+    CRIANCAS = anteriores.children; registros = anteriores.records; pontosExtras = anteriores.bonus;
+    document.querySelector("#children-feedback").textContent = "Não foi possível excluir o cadastro neste aparelho.";
+  }
 }
 function cancelarNovaCrianca(id) {
   const crianca = CRIANCAS.find(item => item.id === id);
@@ -906,7 +936,7 @@ document.querySelector("#memories-gallery").addEventListener("click", evento => 
 document.querySelector("#save-children").addEventListener("click", salvarCadastroCriancas);
 document.querySelector("#add-child").addEventListener("click", () => adicionarCrianca());
 document.querySelector("#children-editor").addEventListener("click", e => { const botao = e.target.closest("[data-remove-child]"); if (botao) cancelarNovaCrianca(botao.dataset.removeChild); });
-document.querySelector("#children-editor").addEventListener("click", e => { const arquivar = e.target.closest("[data-archive-child]"); const restaurar = e.target.closest("[data-restore-child]"); if (arquivar) definirArquivoCrianca(arquivar.dataset.archiveChild, true); else if (restaurar) definirArquivoCrianca(restaurar.dataset.restoreChild, false); });
+document.querySelector("#children-editor").addEventListener("click", e => { const arquivar = e.target.closest("[data-archive-child]"); const restaurar = e.target.closest("[data-restore-child]"); const excluir = e.target.closest("[data-delete-child]"); if (arquivar) definirArquivoCrianca(arquivar.dataset.archiveChild, true); else if (restaurar) definirArquivoCrianca(restaurar.dataset.restoreChild, false); else if (excluir) excluirCriancaDefinitivamente(excluir.dataset.deleteChild); });
 document.querySelector("#toggle-archived-children").addEventListener("click", () => { mostrarCriancasArquivadas = !mostrarCriancasArquivadas; renderizarCadastroCriancas(); });
 document.querySelector("#add-child-from-record").addEventListener("click", () => {
   if (CRIANCAS.filter(crianca => !crianca.arquivada).length >= LIMITE_CRIANCAS) { document.querySelector("#form-feedback").textContent = "O grupo já atingiu o limite de 30 crianças ativas."; return; }
