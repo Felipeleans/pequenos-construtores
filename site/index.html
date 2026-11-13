@@ -1,0 +1,189 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="theme-color" content="#173d32">
+  <meta name="description" content="Painel de acompanhamento individual do Pequenos Construtores.">
+  <link rel="manifest" href="manifest.webmanifest">
+  <link rel="stylesheet" href="styles.css">
+  <link rel="stylesheet" href="dark-theme.css">
+  <link rel="stylesheet" href="auth-theme.css">
+  <title>Pequenos Construtores | Painel do instrutor</title>
+</head>
+<body>
+  <main class="public-home" id="public-home">
+    <header class="public-home-header">
+      <a class="brand" href="#home" aria-label="Pequenos Construtores, página inicial">
+        <svg class="brand-logo" viewBox="0 0 390 66" role="img" aria-labelledby="home-logo-title"><title id="home-logo-title">Pequenos Construtores</title><rect class="logo-patch" x="2" y="5" width="56" height="56" rx="16"/><rect class="logo-stitch" x="7" y="10" width="46" height="46" rx="13"/><path class="logo-house" d="M15 31 30 19l15 12v16H15z"/><path class="logo-roof-stitch" d="m12 32 18-15 18 15M22 47V35h8v12M34 35h7v7h-7z"/><text class="logo-wordmark" x="68" y="32">Pequenos Construtores</text><text class="logo-subline" x="69" y="49">CRESCER, APRENDER E SERVIR</text></svg>
+      </a>
+      <button class="home-login-link" type="button" id="home-login-top">Área do instrutor</button>
+    </header>
+    <section class="home-hero" aria-labelledby="home-title">
+      <div class="home-hero-copy">
+        <p class="eyebrow">FÉ QUE SE CONSTRÓI UM PASSO DE CADA VEZ</p>
+        <h1 id="home-title">Pequenos passos.<br><span>Grandes construtores.</span></h1>
+        <p class="home-lead">Um projeto para acompanhar crianças enquanto elas aprendem, praticam e compartilham valores cristãos por meio de missões individuais.</p>
+        <button class="primary-button home-cta" type="button" id="home-login-button">Acessar o painel do instrutor <span aria-hidden="true">→</span></button>
+        <p class="home-note">Cada criança escolhe uma missão. O instrutor valida e registra a conquista.</p>
+      </div>
+      <div class="home-illustration">
+        <img src="assets/home-pequenos-construtores.png" alt="Crianças e instrutores montam uma barraca ao ar livre enquanto aprendem e colaboram." width="1672" height="941">
+      </div>
+    </section>
+    <section class="home-categories" aria-labelledby="home-categories-title">
+      <p class="eyebrow">QUATRO CAMINHOS DE APRENDIZADO</p><h2 id="home-categories-title">Uma jornada para cada talento</h2>
+      <div class="home-category-grid" id="public-home-categories"></div>
+    </section>
+    <section class="home-how"><div><p class="eyebrow">SIMPLES PARA ACOMPANHAR</p><h2>Um registro de cada conquista</h2></div><p>Cadastre as crianças, escolha a missão concluída e valide o registro. O progresso fica guardado neste aparelho e pode sincronizar quando houver conexão.</p></section>
+    <footer class="public-home-footer"><span>Pequenos Construtores</span><span>Uma jornada de fé, aprendizado e serviço.</span></footer>
+  </main>
+
+  <section class="login-screen" id="login-screen" aria-labelledby="login-title" hidden>
+    <div class="login-card">
+      <span class="login-mark" aria-hidden="true">✦</span>
+      <p class="eyebrow">ÁREA DOS INSTRUTORES</p>
+      <h1 id="login-title">Pequenos Construtores</h1>
+      <p class="login-copy">Acesse o painel ou cadastre até dois instrutores.</p>
+      <div class="auth-tabs" role="tablist" aria-label="Acesso ao painel"><button class="auth-tab active" type="button" data-auth="login">Entrar</button><button class="auth-tab" type="button" data-auth="cadastro">Cadastrar instrutor</button></div>
+      <form id="login-form" class="auth-form">
+        <label for="login-name">Nome do instrutor</label><select id="login-name" required><option value="">Selecione seu nome</option></select>
+        <label for="login-password">PIN de 4 dígitos</label><input id="login-password" type="password" inputmode="numeric" pattern="[0-9]{4}" minlength="4" maxlength="4" autocomplete="current-password" required>
+        <label class="remember-login"><input id="remember-login" type="checkbox"><span>Entrar automaticamente neste aparelho</span></label>
+        <p class="remember-note">Qualquer pessoa com acesso a este aparelho poderá abrir a conta lembrada.</p>
+        <button class="primary-button" type="submit">Entrar no painel</button><p class="auth-feedback" id="login-status" role="status" aria-live="polite"></p>
+      </form>
+      <form id="register-form" class="auth-form" hidden>
+        <p class="login-note" id="register-role-hint">A primeira conta cadastrada será a instrutora principal.</p>
+        <label for="register-name">Nome do instrutor</label><input id="register-name" type="text" autocomplete="name" maxlength="70" required>
+        <label for="register-password">Crie um PIN de 4 dígitos</label><input id="register-password" type="password" inputmode="numeric" pattern="[0-9]{4}" minlength="4" maxlength="4" autocomplete="new-password" required>
+        <label for="register-confirm">Confirme o PIN</label><input id="register-confirm" type="password" inputmode="numeric" pattern="[0-9]{4}" minlength="4" maxlength="4" autocomplete="new-password" required>
+        <button class="primary-button" type="submit">Cadastrar instrutor</button><p class="auth-feedback" id="register-status" role="status" aria-live="polite"></p>
+      </form>
+      <p class="login-note">Contas e senhas ficam neste aparelho. Este protótipo não sincroniza acessos com outros dispositivos.</p>
+      <button class="back-home-button" type="button" id="back-home-button">Voltar à página inicial</button>
+    </div>
+  </section>
+  <header class="topbar" hidden>
+    <a class="brand" href="#inicio" aria-label="Pequenos Construtores, início">
+      <svg class="brand-logo" viewBox="0 0 390 66" role="img" aria-labelledby="brand-logo-title"><title id="brand-logo-title">Pequenos Construtores</title><rect class="logo-patch" x="2" y="5" width="56" height="56" rx="16"/><rect class="logo-stitch" x="7" y="10" width="46" height="46" rx="13"/><path class="logo-house" d="M15 31 30 19l15 12v16H15z"/><path class="logo-roof-stitch" d="m12 32 18-15 18 15M22 47V35h8v12M34 35h7v7h-7z"/><text class="logo-wordmark" x="68" y="32">Pequenos Construtores</text><text class="logo-subline" x="69" y="49">PAINEL DO INSTRUTOR</text></svg>
+    </a>
+    <div class="top-actions">
+      <span class="sync-status" id="sync-status"><i></i><span>Salvo neste aparelho</span></span>
+      <button class="theme-toggle" id="theme-toggle" type="button" aria-label="Ativar modo escuro" aria-pressed="false"><span class="theme-icon" aria-hidden="true">☾</span><span class="theme-label">Modo escuro</span></button>
+      <span class="account-badge" id="current-account-label">Instrutor</span>
+      <button id="logout-button" class="logout-button" type="button">Sair</button>
+    </div>
+  </header>
+
+  <main id="inicio" class="page-shell" hidden>
+    <nav class="section-nav" aria-label="Áreas do painel">
+      <button type="button" class="section-tab active" data-view="view-home">Home</button>
+      <button type="button" class="section-tab" data-view="view-dashboard">Registros</button>
+      <button type="button" class="section-tab" data-view="view-progress">Progresso</button>
+      <button type="button" class="section-tab" data-view="view-podium">Pódio</button>
+      <button type="button" class="section-tab" data-view="view-children">Cadastro crianças</button>
+      <button type="button" class="section-tab" data-view="view-missions">Missões</button>
+      <button type="button" class="section-tab" data-view="view-updates">Atualizações</button>
+    </nav>
+    <section id="view-home" class="app-view active">
+      <section class="panel home-summary-hero">
+        <div class="home-summary-copy"><p class="eyebrow">PEQUENOS CONSTRUTORES</p><h1>Uma jornada de fé, aprendizado e serviço.</h1><p class="intro">Acompanhe cada criança em missões individuais e celebre cada conquista nas quatro categorias.</p><button class="primary-button home-summary-action" id="home-open-records" type="button">Ir para Registros <span aria-hidden="true">→</span></button></div>
+        <div class="home-summary-illustration"><img src="assets/home-pequenos-construtores.png" alt="Crianças e instrutores montam uma barraca ao ar livre enquanto aprendem e colaboram." width="1672" height="941"></div>
+      </section>
+      <section class="stats-grid home-summary-stats" aria-label="Resumo do grupo">
+        <article class="stat-card"><span class="stat-icon green" aria-hidden="true"><svg viewBox="0 0 32 32"><circle cx="16" cy="10" r="5"/><path d="M6 27c.7-6 4.2-9 10-9s9.3 3 10 9z"/><path d="M3 29h26"/></svg></span><div><strong id="home-children-count">0/30</strong><span>crianças acompanhadas</span></div></article>
+        <article class="stat-card"><span class="stat-icon gold" aria-hidden="true"><svg viewBox="0 0 32 32"><path d="M9 6.5h14v20H9z"/><path d="M13 12h6M13 17h6M13 22h3"/><path d="m18 22 2 2 4-4"/></svg></span><div><strong id="home-record-count">0</strong><span>registros neste aparelho</span></div></article>
+        <article class="stat-card"><span class="stat-icon blue" aria-hidden="true"><svg viewBox="0 0 32 32"><path d="M25 11a10 10 0 0 0-17-3L5 11"/><path d="M5 5v6h6"/><path d="M7 21a10 10 0 0 0 17 3l3-3"/><path d="M27 27v-6h-6"/></svg></span><div><strong id="home-pending-count">0</strong><span>aguardando sincronização</span></div></article>
+      </section>
+      <section class="panel home-category-panel"><div class="panel-heading"><div><p class="eyebrow">QUATRO CAMINHOS</p><h2>Progresso por categoria</h2></div><button class="text-button home-progress-link" id="home-open-progress" type="button">Ver progresso <span aria-hidden="true">→</span></button></div><div id="home-category-summary" class="home-category-grid"></div></section>
+      <section class="home-summary-note"><strong>Como funciona</strong><span>A criança escolhe a categoria e a missão. O instrutor valida e salva cada conclusão no passaporte individual.</span></section>
+      <section class="panel home-memories-panel"><div class="panel-heading"><div><p class="eyebrow">LEMBRANÇAS DO GRUPO</p><h2>Momentos da jornada</h2></div><button id="add-memories-button" class="compact-button" type="button">＋ Adicionar fotos e vídeos</button></div><p class="side-copy">Guarde imagens das atividades e conquistas. Os arquivos ficam somente neste aparelho.</p><input id="memories-input" type="file" accept="image/*,video/*" multiple aria-label="Selecionar fotos e vídeos" hidden><p id="memories-status" class="mission-list-status" role="status" aria-live="polite"></p><div id="memories-gallery" class="memories-gallery"></div></section>
+    </section>
+    <section id="view-dashboard" class="app-view" hidden>
+    <section class="welcome-row">
+      <div><p class="eyebrow">ACOMPANHAMENTO INDIVIDUAL</p><h1>Olá, <span id="welcome-name">Instrutor 1</span></h1><p class="intro">Encontre uma criança e registre uma missão em poucos passos.</p></div>
+      <div class="date-card"><span class="date-icon" aria-hidden="true">☀</span><span><strong id="today-label"></strong><small>Pequenos passos, grandes construções</small></span></div>
+    </section>
+
+    <section class="stats-grid" aria-label="Resumo do grupo">
+      <article class="stat-card"><span class="stat-icon green" aria-hidden="true"><svg viewBox="0 0 32 32"><circle cx="16" cy="10" r="5"/><path d="M6 27c.7-6 4.2-9 10-9s9.3 3 10 9z"/><path d="M3 29h26"/></svg></span><div><strong id="children-count">0/30</strong><span>crianças acompanhadas</span></div></article>
+      <article class="stat-card"><span class="stat-icon gold" aria-hidden="true"><svg viewBox="0 0 32 32"><path d="M9 6.5h14v20H9z"/><path d="M13 12h6M13 17h6M13 22h3"/><path d="m18 22 2 2 4-4"/></svg></span><div><strong id="today-count">0</strong><span>registros neste aparelho</span></div></article>
+      <article class="stat-card"><span class="stat-icon blue" aria-hidden="true"><svg viewBox="0 0 32 32"><path d="M25 11a10 10 0 0 0-17-3L5 11"/><path d="M5 5v6h6"/><path d="M7 21a10 10 0 0 0 17 3l3-3"/><path d="M27 27v-6h-6"/></svg></span><div><strong id="pending-count">0</strong><span>aguardando sincronização</span></div></article>
+    </section>
+
+    <div class="content-grid">
+      <section class="panel register-panel" aria-labelledby="register-title">
+        <div class="panel-heading"><div><p class="eyebrow">NOVO REGISTRO</p><h2 id="register-title">Validar missão</h2></div><span class="step-pill">4 passos</span></div>
+        <ol class="step-indicator" id="registration-progress" aria-label="Etapas do registro"><li class="active" aria-current="step"><b>1</b><span>Criança</span></li><li><b>2</b><span>Categoria</span></li><li><b>3</b><span>Missão</span></li><li><b>4</b><span>Validar</span></li></ol>
+        <form id="record-form">
+          <div class="field-block">
+            <div class="child-field-header"><label for="child-search">1. Localize a criança</label><button id="add-child-from-record" class="quick-add-button" type="button">+ Adicionar criança</button></div>
+            <div class="search-wrap"><span aria-hidden="true">⌕</span><input id="child-search" type="search" placeholder="Buscar por nome, igreja ou número" autocomplete="off"><kbd>30</kbd></div>
+            <div id="child-list" class="child-list" role="listbox" aria-label="Crianças"></div>
+          </div>
+          <div class="field-block"><span class="field-label">2. Escolha a categoria</span><div id="category-list" class="category-list"></div></div>
+          <div class="field-block"><label for="mission-select">3. Missões disponíveis</label><select id="mission-select" class="mission-select" disabled></select><p id="mission-list-status" class="mission-list-status" role="status" aria-live="polite"></p></div>
+          <section class="mission-description" id="mission-description-area" aria-live="polite" aria-label="Descrição da missão"></section>
+          <div class="validation-box"><span class="validation-icon" aria-hidden="true">✓</span><div><strong>Confira com a criança</strong><p>Valide a conclusão antes de salvar no passaporte individual.</p></div></div>
+          <button id="save-button" class="primary-button" type="submit" disabled><span aria-hidden="true">✓</span> Validar e salvar registro</button>
+          <div id="edit-actions" class="edit-actions" hidden><button id="delete-edit-record" class="delete-record-button" type="button">Excluir registro</button><button id="cancel-edit" class="cancel-edit-button" type="button">Cancelar edição</button></div>
+          <p class="form-feedback" id="form-feedback" role="status" aria-live="polite"></p>
+        </form>
+      </section>
+
+      <aside class="side-column">
+        <section class="panel passport-panel"><div class="panel-heading"><div><p class="eyebrow">VISÃO DO GRUPO</p><h2>Passaporte</h2></div><span class="passport-icon" aria-hidden="true">▤</span></div><p class="side-copy">Cada conquista é individual. A criança escolhe por qual categoria quer começar.</p><div id="category-summary" class="summary-list"></div><button class="text-button" id="show-records" type="button">Ver registros recentes <span aria-hidden="true">→</span></button></section>
+        <section class="panel recent-panel"><div class="panel-heading"><div><p class="eyebrow">ATIVIDADE</p><h2>Registros recentes</h2></div><span class="recent-count" id="recent-count">0</span></div><div id="recent-list" class="recent-list"><div class="empty-state"><span aria-hidden="true">✦</span><p>Os registros salvos aparecerão aqui.</p></div></div></section>
+      </aside>
+    </div>
+    </section>
+    <section id="view-children" class="app-view" hidden>
+      <div class="welcome-row"><div><p class="eyebrow">CADASTRO</p><h1>Crianças</h1><p class="intro">Edite o nome, a idade e a igreja de cada criança. O protótipo mantém 30 cadastros.</p></div><span class="step-pill">30 crianças</span></div>
+      <section class="panel roster-panel"><div class="panel-heading"><div><p class="eyebrow">DADOS DO GRUPO</p><h2>Cadastro das crianças</h2></div><div class="roster-actions"><button class="add-child-button" type="button" id="add-child">+ Adicionar criança</button><button class="primary-button compact-button" type="button" id="save-children">Salvar cadastro</button></div></div><p class="roster-hint">Cadastre uma criança por vez, até o limite de 30. No campo Igreja, escolha um nome já usado ou digite um novo.</p><div id="children-editor" class="children-editor"></div><datalist id="church-options"></datalist><p id="children-feedback" class="form-feedback" role="status" aria-live="polite"></p></section>
+    </section>
+    <section id="view-progress" class="app-view" hidden>
+      <div class="welcome-row"><div><p class="eyebrow">ACOMPANHAMENTO INDIVIDUAL</p><h1>Progresso das crianças</h1><p class="intro">Veja as conquistas de cada criança por categoria.</p></div><span class="step-pill">4 categorias</span></div>
+      <section class="panel progress-overview-panel"><div class="panel-heading"><div><p class="eyebrow">PASSAPORTES INDIVIDUAIS</p><h2>Progresso do grupo</h2></div><label class="progress-search"><span aria-hidden="true">⌕</span><input id="progress-search" type="search" placeholder="Buscar por nome ou igreja"></label></div><div id="children-progress" class="children-progress-grid"></div></section>
+    </section>
+    <section id="view-podium" class="app-view" hidden>
+      <div class="welcome-row"><div><p class="eyebrow">CONQUISTAS DO GRUPO</p><h1>Pódio</h1><p class="intro">Some os pontos das missões e os pontos extras concedidos pelas instrutoras.</p></div><span class="step-pill">1 missão concluída = 1 ponto</span></div>
+      <div class="podium-layout">
+        <section class="panel podium-panel"><div class="panel-heading"><div><p class="eyebrow">RANKING INDIVIDUAL</p><h2>Quem está construindo sua jornada</h2></div><span class="passport-icon" aria-hidden="true">🏆</span></div><div id="podium-stage" class="podium-stage"></div><div id="podium-ranking" class="podium-ranking"></div></section>
+        <section class="panel bonus-panel"><div class="panel-heading"><div><p class="eyebrow">RECONHECIMENTO EXTRA</p><h2>Conceder pontos extras</h2></div><span class="passport-icon bonus-icon" aria-hidden="true">＋</span></div><p class="side-copy">Reconheça uma atitude especial ou uma conquista. Os pontos extras entram na soma do pódio.</p>
+          <form id="bonus-form" class="bonus-form">
+            <label for="bonus-child">Criança</label><select id="bonus-child" required><option value="">Selecione uma criança</option></select>
+            <label for="bonus-points">Pontos extras</label><input id="bonus-points" type="number" min="1" step="1" inputmode="numeric" placeholder="Ex.: 2" required>
+            <label for="bonus-reason">Motivo <span>(opcional)</span></label><input id="bonus-reason" type="text" maxlength="120" placeholder="Ex.: atitude de cuidado">
+            <button class="primary-button" id="bonus-submit" type="submit" disabled>Conceder pontos</button><p class="form-feedback" id="bonus-feedback" role="status" aria-live="polite"></p>
+          </form>
+        </section>
+      </div>
+      <section class="panel bonus-history-panel"><div class="panel-heading"><div><p class="eyebrow">PONTOS CONCEDIDOS</p><h2>Histórico de pontos extras</h2></div><span class="recent-count" id="bonus-history-count">0</span></div>
+        <div class="bonus-history-search"><label for="bonus-history-search">Pesquisar criança</label><input id="bonus-history-search" type="search" placeholder="Digite o nome ou a igreja"></div>
+        <div id="bonus-points-summary" class="bonus-points-summary"><div class="empty-state"><p>Pesquise uma criança para consultar os pontos das missões, os extras e o total.</p></div></div>
+        <div id="bonus-history-list" class="bonus-history-list"></div>
+      </section>
+    </section>
+    <section id="view-missions" class="app-view" hidden>
+      <div class="welcome-row"><div><p class="eyebrow">CATÁLOGO DE ATIVIDADES</p><h1>Missões</h1><p class="intro">Consulte e atualize o nome e a descrição de cada missão.</p></div><span class="step-pill" id="mission-editor-role">Somente leitura</span></div>
+      <div id="missions-editor" class="missions-editor"></div>
+      <p id="missions-feedback" class="form-feedback" role="status" aria-live="polite"></p>
+    </section>
+    <section id="view-updates" class="app-view" hidden>
+      <div class="welcome-row"><div><p class="eyebrow">NOVIDADES DO PROJETO</p><h1>Atualizações</h1><p class="intro">Acompanhe as melhorias já feitas e as próximas mudanças do Pequenos Construtores.</p></div><span class="step-pill">Novidades</span></div>
+      <section class="panel updates-panel"><div class="panel-heading"><div><p class="eyebrow">MELHORIAS RECENTES</p><h2>O que há de novo</h2></div><span class="passport-icon" aria-hidden="true">✦</span></div>
+        <div class="updates-list">
+          <article class="update-card"><span class="update-mark">01</span><div><h3>Pódio e pontos extras</h3><p>O pódio soma um ponto por missão concluída e os pontos extras concedidos pelos instrutores.</p></div></article>
+          <article class="update-card"><span class="update-mark">02</span><div><h3>Busca de pontuação</h3><p>Pesquise por criança ou igreja para consultar pontos de missões, pontos extras e o total, junto com os motivos dos extras.</p></div></article>
+          <article class="update-card"><span class="update-mark">03</span><div><h3>Registro e progresso individuais</h3><p>Consulte o avanço de cada criança nas quatro categorias e edite ou exclua registros quando necessário.</p></div></article>
+        </div>
+      </section>
+      <section class="updates-future"><span class="updates-future-icon" aria-hidden="true">↻</span><div><h2>Próximas atualizações</h2><p>Novas melhorias e mudanças do aplicativo serão apresentadas nesta área.</p></div></section>
+    </section>
+    <footer><span>Pequenos Construtores</span><span>Dados guardados neste aparelho enquanto estiver offline.</span></footer>
+  </main>
+  <div id="toast" class="toast" role="status" aria-live="polite"></div>
+  <script src="app.js" defer></script>
+</body>
+</html>

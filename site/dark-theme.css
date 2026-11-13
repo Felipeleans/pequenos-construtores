@@ -1,0 +1,117 @@
+.theme-toggle{display:flex;align-items:center;gap:7px;border:1px solid #e6ebe5;background:#fff;color:#405448;border-radius:8px;padding:8px 10px;font:600 11px 'DM Sans',sans-serif;cursor:pointer}.theme-toggle:hover{background:#f5f8f4}.theme-icon{font-size:15px;line-height:1}
+html[data-theme="escuro"]{color-scheme:dark;--green:#a6cfaa;--green-2:#b2d8b4;--pale:#2b2b2b;--line:#3a3a3a;--muted:#a1a1a1;--shadow:0 14px 36px rgba(0,0,0,.2);color:#e7e7e7;background:#141414}
+html[data-theme="escuro"] body{background:#141414;color:#e7e7e7}
+html[data-theme="escuro"] .topbar,html[data-theme="escuro"] .stat-card,html[data-theme="escuro"] .panel,html[data-theme="escuro"] .date-card{background:#222;border-color:#383838}
+html[data-theme="escuro"] .brand,html[data-theme="escuro"] h1,html[data-theme="escuro"] h2,html[data-theme="escuro"] .stat-card strong,html[data-theme="escuro"] .date-card strong,html[data-theme="escuro"] .category-option strong,html[data-theme="escuro"] .summary-row strong,html[data-theme="escuro"] .record-main strong,html[data-theme="escuro"] .validation-box strong{color:#e3eae4}
+html[data-theme="escuro"] .brand small,html[data-theme="escuro"] .intro,html[data-theme="escuro"] .date-card small,html[data-theme="escuro"] .stat-card div>span,html[data-theme="escuro"] .side-copy,html[data-theme="escuro"] .summary-row small,html[data-theme="escuro"] .record-main small,html[data-theme="escuro"] .validation-box p{color:#a1a1a1}
+html[data-theme="escuro"] .account-picker select{color:#e3eae4}
+html[data-theme="escuro"] .theme-toggle{background:#29352d;border-color:#3a493e;color:#e3eae4}
+html[data-theme="escuro"] .theme-toggle:hover{background:#344238}
+html[data-theme="escuro"] .step-indicator:before{background:#39453d}
+html[data-theme="escuro"] .step-indicator b{background:#202923;border-color:#39453d;color:#a1aea4}
+html[data-theme="escuro"] .step-indicator li.active b{background:#426d4e;border-color:#426d4e;color:#fff}
+html[data-theme="escuro"] .field-block>label,html[data-theme="escuro"] .field-label{color:#cfdbd0}
+html[data-theme="escuro"] .search-wrap,html[data-theme="escuro"] .mission-select{background:#191919;border-color:#3a3a3a;color:#e7e7e7}
+html[data-theme="escuro"] .search-wrap input{color:#e3eae4}
+html[data-theme="escuro"] .search-wrap input::placeholder{color:#88958b}
+html[data-theme="escuro"] .search-wrap kbd{border-color:#3a473d;color:#a1aea4}
+html[data-theme="escuro"] .child-option,html[data-theme="escuro"] .category-option{background:#222;border-color:#393939;color:#c4c4c4}
+html[data-theme="escuro"] .child-option:hover,html[data-theme="escuro"] .child-option.selected,html[data-theme="escuro"] .category-option:hover,html[data-theme="escuro"] .category-option.selected{background:#303030;border-color:#6d9c75;color:#e7e7e7}
+html[data-theme="escuro"] .category-option.selected{box-shadow:inset 0 0 0 1px #6d9c75}
+html[data-theme="escuro"] .validation-box{background:#2a2a2a;border-color:#414141}
+html[data-theme="escuro"] .validation-icon{background:#314536;color:#a6cfaa}
+html[data-theme="escuro"] .summary-row{background:#1b1b1b;border-color:#383838}
+html[data-theme="escuro"] .passport-icon,html[data-theme="escuro"] .recent-count{background:#303030;color:#d4d4d4}
+html[data-theme="escuro"] .record-row{border-color:#383838}
+html[data-theme="escuro"] footer{color:#8d9a90}
+html[data-theme="escuro"] .empty-state{color:#a1aea4}
+html[data-theme="escuro"] .primary-button{background:#3f704d;color:#fff}
+html[data-theme="escuro"] .primary-button:hover:not(:disabled){background:#4b805a}
+html[data-theme="escuro"] .primary-button:disabled{background:#484848;color:#c8c8c8}
+html[data-theme="escuro"] .stat-icon.green,html[data-theme="escuro"] .stat-icon.gold,html[data-theme="escuro"] .stat-icon.blue{background:#303030;color:#d0d0d0}
+@media(max-width:620px){.theme-label{display:none}.theme-toggle{padding:7px 9px}.theme-icon{font-size:17px}}
+.category-option{display:grid;justify-items:center;align-content:center;gap:5px;text-align:center}
+.category-option .cat-icon{display:grid;place-items:center;margin:0}
+.badge-art{width:43px;height:43px;display:block;filter:drop-shadow(0 2px 1px rgba(40,48,32,.15))}
+.badge-art-small{width:30px;height:30px;filter:drop-shadow(0 1px 1px rgba(40,48,32,.12))}
+.badge-cloth{fill:#d9dfca;stroke:#a38a55;stroke-width:1.3}
+.badge-seam{fill:none;stroke:#9b804b;stroke-width:1.1;stroke-dasharray:1.2 2;stroke-linecap:round}
+.badge-inner{fill:#eee9d8;stroke:#74835d;stroke-width:1}
+.badge-center-stitch{fill:none;stroke:#9b875e;stroke-width:.8;stroke-dasharray:1 2;opacity:.8}
+.thread-shadow{fill:#4e6d4e;stroke:#344b39;stroke-width:1.1;stroke-linejoin:round}
+.thread-fill{fill:#627f58;stroke:#a7b58a;stroke-width:1;stroke-dasharray:2 1.3;stroke-linejoin:round}
+.thread-light{fill:none;stroke:#e6dfbd;stroke-width:1.6;stroke-linecap:round;stroke-linejoin:round;stroke-dasharray:2.4 1.1}
+.thread-gold{fill:none;stroke:#b68f4f;stroke-width:1.4;stroke-linecap:round;stroke-linejoin:round;stroke-dasharray:1.5 1}
+.summary-row .cat-icon{display:grid;place-items:center;width:31px;height:31px;flex:none}
+.record-avatar:has(.badge-art){background:transparent;width:33px;height:33px;flex:none}
+html[data-theme="escuro"] .badge-cloth{fill:#394539;stroke:#c2a66d}
+html[data-theme="escuro"] .badge-seam{stroke:#cfb77e}
+html[data-theme="escuro"] .badge-inner{fill:#29372d;stroke:#9aaa79}
+html[data-theme="escuro"] .badge-center-stitch{stroke:#cbb887}
+html[data-theme="escuro"] .thread-shadow{fill:#65855f;stroke:#b4c091}
+html[data-theme="escuro"] .thread-fill{fill:#79966b;stroke:#d1d6a4}
+html[data-theme="escuro"] .thread-light{stroke:#f0e9c9}
+html[data-theme="escuro"] .thread-gold{stroke:#d5b06a}
+.mission-description{margin:-5px 0 16px;padding:13px;background:#f8faf6;border:1px solid #e6ece3;border-radius:10px}
+.mission-description-empty strong{font-size:11px;color:#34473c}
+.mission-description-empty p{font-size:10px;line-height:1.5;color:#7b877e;margin:5px 0 0}
+.mission-description-heading{display:flex;align-items:center;justify-content:space-between;gap:8px;margin-bottom:11px}
+.mission-description-heading .eyebrow{margin-bottom:4px}
+.mission-description-heading strong{font-size:10px;color:#34473c}
+.editor-badge{border-radius:20px;padding:5px 7px;background:#edf3e9;color:#557454;font-size:8px;white-space:nowrap}
+.description-label{display:block;font-size:10px;font-weight:700;color:#536257;margin-bottom:6px}
+#mission-description{width:100%;resize:vertical;border:1px solid #dfe6dd;border-radius:8px;background:#fff;padding:9px 10px;color:#34473c;font:11px/1.5 'DM Sans',sans-serif;min-height:76px;outline-color:#6d9c75}
+#mission-description::placeholder{color:#9aa49d}
+.description-actions{display:flex;align-items:center;justify-content:space-between;gap:8px;margin-top:8px}
+.description-status{font-size:9px;color:#89948c}
+.description-status.saved{color:#3f704d}
+.save-description-button{border:1px solid #456f4c;border-radius:7px;background:#fff;color:#386344;padding:7px 9px;font:700 9px 'DM Sans',sans-serif;cursor:pointer}
+.save-description-button:hover{background:#eff5ee}
+.description-readonly{margin:0;color:#66736a;font-size:10px;line-height:1.55;white-space:normal}
+html[data-theme="escuro"] .mission-description{background:#202020;border-color:#393939}
+html[data-theme="escuro"] .mission-description-empty strong,html[data-theme="escuro"] .mission-description-heading strong,html[data-theme="escuro"] .description-label{color:#e2e2e2}
+html[data-theme="escuro"] .mission-description-empty p,html[data-theme="escuro"] .description-readonly,html[data-theme="escuro"] .description-status{color:#aaa}
+html[data-theme="escuro"] .editor-badge{background:#303030;color:#c2d3c0}
+html[data-theme="escuro"] #mission-description{background:#191919;border-color:#424242;color:#e5e5e5}
+html[data-theme="escuro"] #mission-description::placeholder{color:#858585}
+html[data-theme="escuro"] .save-description-button{background:#303030;border-color:#739274;color:#d5e1d3}
+html[data-theme="escuro"] .save-description-button:hover{background:#393939}
+.login-screen{min-height:100vh;display:grid;place-items:center;padding:24px;background:#f4f6f1}
+.login-card{width:min(100%,390px);background:#fff;border:1px solid #e8ece6;border-radius:18px;padding:32px;box-shadow:0 20px 60px rgba(28,55,42,.09)}
+.login-mark{display:grid;place-items:center;width:48px;height:48px;border-radius:15px;background:#173d32;color:#f1d69f;font-size:27px;margin-bottom:20px}
+.login-card h1{font-size:23px;margin:0}.login-copy{font-size:12px;line-height:1.5;color:#748078;margin:9px 0 22px}.login-card>label{display:block;font-size:10px;font-weight:700;color:#536257;margin-bottom:6px}.login-card .mission-select{margin-bottom:12px}.login-note{font-size:9px;line-height:1.5;text-align:center;color:#89948c;margin:11px 0 0}
+.section-nav{display:flex;gap:6px;margin:0 0 22px;padding:4px;background:#e9eee8;border-radius:10px;width:max-content;max-width:100%;overflow:auto}
+.section-tab{border:0;border-radius:7px;background:transparent;color:#65736a;padding:9px 13px;font:600 11px 'DM Sans',sans-serif;white-space:nowrap;cursor:pointer}
+.section-tab.active{background:#fff;color:#234b35;box-shadow:0 1px 5px rgba(24,54,36,.08)}
+.app-view[hidden]{display:none!important}
+.compact-button{width:auto;padding:0 14px;height:36px}
+.roster-hint{font-size:10px;color:#7a867e;margin:12px 0 16px}
+.children-editor{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:8px}
+.child-edit-row{display:grid;grid-template-columns:32px minmax(140px,1.2fr) 82px minmax(140px,1fr);gap:7px;align-items:end;padding:9px;background:#fafbf9;border:1px solid #edf0eb;border-radius:9px}
+.child-edit-number{align-self:center;color:#87938a;font-size:10px;font-weight:700;text-align:center}
+.child-edit-row label,.mission-admin-card label{display:grid;gap:4px;color:#748078;font-size:9px;font-weight:600}
+.child-edit-row input,.child-edit-row select,.mission-admin-card input,.mission-admin-card textarea{width:100%;border:1px solid #e1e7df;border-radius:7px;background:#fff;color:#34473c;padding:8px;font:10px 'DM Sans',sans-serif;min-width:0}
+.child-edit-row select{padding:8px 4px}
+.missions-editor{display:grid;gap:15px}
+.mission-category-panel{padding:18px;background:#fff;border:1px solid #edf0eb;border-radius:14px;box-shadow:var(--shadow)}
+.mission-category-heading{display:flex;align-items:center;gap:8px;margin-bottom:12px}.mission-category-heading h2{font-size:14px}
+.mission-admin-grid{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:9px}
+.mission-admin-card{padding:12px;border:1px solid #edf0eb;border-radius:10px;background:#fafbf9;display:grid;align-content:start;gap:9px}
+.mission-admin-card .eyebrow{margin:0}.mission-admin-card textarea{resize:vertical;line-height:1.45;min-height:72px}.mission-admin-card input[readonly],.mission-admin-card textarea[readonly]{background:#f0f2ef;color:#69766d}.mission-admin-card button:disabled{opacity:.55;cursor:not-allowed}
+.logout-button{border:0;background:transparent;color:#69776e;font:600 10px 'DM Sans',sans-serif;cursor:pointer;padding:7px}
+html[data-theme="escuro"] .login-screen{background:#141414}
+html[data-theme="escuro"] .login-card{background:#222;border-color:#383838}
+html[data-theme="escuro"] .login-copy,html[data-theme="escuro"] .login-note{color:#aaa}
+html[data-theme="escuro"] .login-card>label{color:#d0d0d0}
+html[data-theme="escuro"] .section-nav{background:#202020}
+html[data-theme="escuro"] .section-tab{color:#b6b6b6}
+html[data-theme="escuro"] .section-tab.active{background:#383838;color:#e7e7e7}
+html[data-theme="escuro"] .roster-hint{color:#aaa}
+html[data-theme="escuro"] .child-edit-row,html[data-theme="escuro"] .mission-admin-card{background:#1b1b1b;border-color:#383838}
+html[data-theme="escuro"] .mission-category-panel{background:#222;border-color:#383838}
+html[data-theme="escuro"] .child-edit-row label,html[data-theme="escuro"] .mission-admin-card label{color:#aaa}
+html[data-theme="escuro"] .child-edit-row input,html[data-theme="escuro"] .child-edit-row select,html[data-theme="escuro"] .mission-admin-card input,html[data-theme="escuro"] .mission-admin-card textarea{background:#191919;border-color:#424242;color:#e5e5e5}
+html[data-theme="escuro"] .mission-admin-card input[readonly],html[data-theme="escuro"] .mission-admin-card textarea[readonly]{background:#292929;color:#aaa}
+html[data-theme="escuro"] .logout-button{color:#bdbdbd}
+@media(max-width:760px){.mission-admin-grid{grid-template-columns:1fr}.children-editor{grid-template-columns:1fr}}
+@media(max-width:620px){.section-nav{width:100%;gap:3px}.section-tab{padding:9px 10px;font-size:10px}.child-edit-row{grid-template-columns:28px minmax(0,1fr) 78px}.child-church-field{grid-column:2/4}.roster-panel{padding:14px}}

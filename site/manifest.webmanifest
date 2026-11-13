@@ -1,0 +1,13 @@
+{
+  "name": "Pequenos Construtores — Painel do instrutor",
+  "short_name": "Construtores",
+  "description": "Acompanhamento individual de missões e conquistas.",
+  "lang": "pt-BR",
+  "start_url": "./",
+  "display": "standalone",
+  "icons": [
+    { "src": "./icon.svg", "sizes": "any", "type": "image/svg+xml", "purpose": "any maskable" }
+  ],
+  "background_color": "#f4f6f1",
+  "theme_color": "#173d32"
+}
