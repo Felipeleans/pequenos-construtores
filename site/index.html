@@ -47,7 +47,7 @@
       <p class="login-copy">Entre com seu nome e PIN. A conta principal pode incluir outros instrutores na aba Equipe.</p>
       <div class="auth-tabs" role="tablist" aria-label="Acesso ao painel"><button class="auth-tab active" type="button" data-auth="login">Entrar</button><button class="auth-tab" type="button" data-auth="cadastro">Criar conta principal</button></div>
       <form id="login-form" class="auth-form">
-        <label for="login-team-code">Código da equipe</label><input id="login-team-code" type="text" autocapitalize="characters" autocomplete="off" maxlength="48" placeholder="Para entrar em outro aparelho">
+        <label for="login-team-code">Código da equipe</label><div class="login-team-code-row"><input id="login-team-code" type="text" autocapitalize="characters" autocomplete="off" maxlength="48" placeholder="Para entrar em outro aparelho"><button id="load-team-members" class="load-team-members-button" type="button">Carregar nomes</button></div><p class="login-team-hint">No primeiro acesso em outro aparelho, informe o código da equipe e toque em “Carregar nomes”.</p>
         <label for="login-name">Nome do instrutor</label><select id="login-name" required><option value="">Selecione seu nome</option></select>
         <label for="login-password">PIN de 4 dígitos</label><input id="login-password" type="password" inputmode="numeric" pattern="[0-9]{4}" minlength="4" maxlength="4" autocomplete="current-password" required>
         <label class="remember-login"><input id="remember-login" type="checkbox"><span>Entrar automaticamente neste aparelho</span></label>

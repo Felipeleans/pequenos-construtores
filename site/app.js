@@ -136,16 +136,25 @@ async function salvarCredencialLocal(id, nome, senha, papel) {
   return conta;
 }
 async function carregarEquipeRemota(codigo) {
-  if (!NUVEM?.configurado() || !codigo?.trim() || !navigator.onLine) return;
+  const status = document.querySelector("#login-status");
+  const botao = document.querySelector("#load-team-members");
+  const valor = String(codigo || "").trim().toUpperCase();
+  if (!valor) { status.textContent = "Digite o código da equipe para carregar os nomes."; return; }
+  if (!NUVEM?.configurado()) { status.textContent = "A sincronização da equipe ainda não está configurada neste aplicativo."; return; }
+  if (!navigator.onLine) { status.textContent = "Conecte este aparelho à internet para carregar os nomes."; return; }
+  botao.disabled = true;
+  botao.textContent = "Carregando…";
+  status.textContent = "Buscando os nomes da equipe…";
   try {
-    const resultado = await NUVEM.listarMembros(codigo);
+    const resultado = await NUVEM.listarMembros(valor);
     membrosRemotos = resultado.members || [];
     renderizarListaInstrutores();
+    status.textContent = membrosRemotos.length ? "Nomes carregados. Selecione o instrutor e digite o PIN." : "Nenhum instrutor foi encontrado para este código.";
   } catch (erro) {
     membrosRemotos = [];
     renderizarListaInstrutores();
-    document.querySelector("#login-status").textContent = erro?.message || "Não foi possível localizar a equipe.";
-  }
+    status.textContent = erro?.message || "Não foi possível localizar a equipe. Confira o código e tente novamente.";
+  } finally { botao.disabled = false; botao.textContent = "Carregar nomes"; }
 }
 function aplicarDadosDaNuvem() {
   registros = lerRegistros(); pontosExtras = lerPontosExtras(); CRIANCAS = lerCriancas(); CATALOGO = lerCatalogo();
@@ -966,8 +975,8 @@ document.querySelector("#back-to-login-after-reset").addEventListener("click", (
   document.querySelector(".auth-tabs").hidden = false;
   document.querySelector("#reset-pin-status").textContent = "";
 });
-document.querySelector("#login-team-code").addEventListener("change", evento => carregarEquipeRemota(evento.target.value));
-document.querySelector("#login-team-code").addEventListener("blur", evento => carregarEquipeRemota(evento.target.value));
+document.querySelector("#load-team-members").addEventListener("click", () => carregarEquipeRemota(document.querySelector("#login-team-code").value));
+document.querySelector("#login-team-code").addEventListener("input", () => { membrosRemotos = []; renderizarListaInstrutores(); document.querySelector("#login-status").textContent = ""; });
 document.querySelector("#copy-team-code").addEventListener("click", async () => {
   try { await navigator.clipboard.writeText(NUVEM.lerCodigoEquipe()); document.querySelector("#cloud-status-message").textContent = "Código da equipe copiado."; }
   catch { document.querySelector("#cloud-status-message").textContent = "Selecione e copie o código da equipe manualmente."; }
@@ -994,6 +1003,7 @@ const abrirLogin = () => {
   document.querySelector("#login-form").hidden = false;
   document.querySelector(".auth-tabs").hidden = false;
   document.querySelector("#login-team-code").value = NUVEM?.lerCodigoEquipe() || "";
+  if (document.querySelector("#login-team-code").value) carregarEquipeRemota(document.querySelector("#login-team-code").value);
   document.querySelector("#login-name").focus();
 };
 document.querySelector("#home-login-button").addEventListener("click", abrirLogin);
