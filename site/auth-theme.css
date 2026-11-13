@@ -304,3 +304,13 @@ html[data-theme="escuro"] .team-account-actions .remove-child-button{border-colo
 html[data-theme="escuro"] .child-row-actions .child-roster-action{border-color:#526b4d;background:#303b30;color:#d7e6d2}
 html[data-theme="escuro"] .child-row-actions .delete-child-button{border-color:#76524c;background:#352524;color:#efb2a8}
 @media(max-width:520px){.child-row-actions{gap:6px}.child-row-actions button{width:80px;height:30px;font-size:9px}}
+.roster-actions{gap:8px;flex-wrap:wrap}
+.roster-actions>button{display:inline-flex;align-items:center;justify-content:center;box-sizing:border-box;flex:1 1 118px;min-width:118px;width:auto;height:36px;margin:0;padding:0 12px;border-radius:8px;font:700 10px 'DM Sans',sans-serif;line-height:1;white-space:nowrap}
+.roster-actions .secondary-button{border:1px solid #9caf9c;background:#fff;color:#396448;cursor:pointer}
+.roster-actions .secondary-button:hover{background:#eef5ec}
+.roster-actions .add-child-button{border-color:#9caf9c;background:#fff;color:#396448;padding:0 12px}
+.roster-actions .add-child-button:hover{background:#eef5ec}
+.roster-actions .primary-button{width:auto;height:36px;padding:0 12px}
+html[data-theme="escuro"] .roster-actions .secondary-button,html[data-theme="escuro"] .roster-actions .add-child-button{background:#292929;border-color:#596c58;color:#c6dec3}
+html[data-theme="escuro"] .roster-actions .secondary-button:hover,html[data-theme="escuro"] .roster-actions .add-child-button:hover{background:#343a33}
+@media(max-width:760px){.roster-panel>.panel-heading{align-items:flex-start;flex-wrap:wrap;gap:12px}.roster-actions{width:100%;flex-wrap:nowrap}.roster-actions>button{flex:1 1 0;min-width:0;padding:0 7px;font-size:9px}}
