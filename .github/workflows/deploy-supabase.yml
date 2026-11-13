@@ -43,6 +43,7 @@ jobs:
           supabase functions deploy list-members --no-verify-jwt
           supabase functions deploy login-pin --no-verify-jwt
           supabase functions deploy add-instructor --no-verify-jwt
+          supabase functions deploy manage-instructor --no-verify-jwt
           supabase functions deploy request-pin-reset --no-verify-jwt
           supabase functions deploy reset-pin --no-verify-jwt
         env:
