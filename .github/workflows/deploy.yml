@@ -1,0 +1,30 @@
+name: Publicar o Pequenos Construtores
+on:
+  push:
+    branches: [main]
+  workflow_dispatch:
+permissions:
+  contents: read
+  pages: write
+  id-token: write
+concurrency:
+  group: paginas
+  cancel-in-progress: true
+jobs:
+  publicar:
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+    runs-on: ubuntu-latest
+    steps:
+      - name: Baixar arquivos do projeto
+        uses: actions/checkout@v4
+      - name: Preparar GitHub Pages
+        uses: actions/configure-pages@v5
+      - name: Enviar site estático
+        uses: actions/upload-pages-artifact@v4
+        with:
+          path: site
+      - name: Publicar site
+        id: deployment
+        uses: actions/deploy-pages@v4
