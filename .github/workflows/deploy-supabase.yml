@@ -1,0 +1,47 @@
+name: Publicar sincronização segura
+on:
+  workflow_dispatch:
+permissions:
+  contents: read
+jobs:
+  publicar-banco-e-funcoes:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Baixar arquivos do projeto
+        uses: actions/checkout@v4
+      - name: Extrair arquivos da sincronização
+        run: unzip -oq supabase-bundle.zip
+      - name: Preparar Supabase CLI
+        uses: supabase/setup-cli@v1
+        with:
+          version: latest
+      - name: Vincular ao projeto
+        run: supabase link --project-ref "$SUPABASE_PROJECT_REF" --password "$SUPABASE_DB_PASSWORD"
+        env:
+          SUPABASE_ACCESS_TOKEN: ${{ secrets.SUPABASE_ACCESS_TOKEN }}
+          SUPABASE_PROJECT_REF: bflltzcvnqfilxpezfqt
+          SUPABASE_DB_PASSWORD: ${{ secrets.SUPABASE_DB_PASSWORD }}
+      - name: Aplicar estrutura do banco
+        run: supabase db push
+        env:
+          SUPABASE_ACCESS_TOKEN: ${{ secrets.SUPABASE_ACCESS_TOKEN }}
+          SUPABASE_PROJECT_REF: bflltzcvnqfilxpezfqt
+          SUPABASE_DB_PASSWORD: ${{ secrets.SUPABASE_DB_PASSWORD }}
+      - name: Definir segredos das funções
+        run: supabase secrets set "PIN_PEPPER=$PIN_PEPPER" "BOOTSTRAP_TOKEN=$BOOTSTRAP_TOKEN" "PUBLIC_APP_URL=https://felipeleans.github.io/pequenos-construtores/"
+        env:
+          SUPABASE_ACCESS_TOKEN: ${{ secrets.SUPABASE_ACCESS_TOKEN }}
+          SUPABASE_PROJECT_REF: bflltzcvnqfilxpezfqt
+          PIN_PEPPER: ${{ secrets.PIN_PEPPER }}
+          BOOTSTRAP_TOKEN: ${{ secrets.BOOTSTRAP_TOKEN }}
+      - name: Publicar funções de segurança
+        run: |
+          supabase functions deploy setup-team --no-verify-jwt
+          supabase functions deploy list-members --no-verify-jwt
+          supabase functions deploy login-pin --no-verify-jwt
+          supabase functions deploy add-instructor --no-verify-jwt
+          supabase functions deploy request-pin-reset --no-verify-jwt
+          supabase functions deploy reset-pin --no-verify-jwt
+        env:
+          SUPABASE_ACCESS_TOKEN: ${{ secrets.SUPABASE_ACCESS_TOKEN }}
+          SUPABASE_PROJECT_REF: bflltzcvnqfilxpezfqt
