@@ -51,9 +51,11 @@ function renderizarListaInstrutores() {
   const seletor = document.querySelector("#login-name");
   const selecionado = seletor.value;
   const contas = membrosRemotos.length ? membrosRemotos : instrutores;
-  seletor.innerHTML = `<option value="">Selecione seu nome</option>${contas.map(conta => `<option value="${escapar(conta.nome)}">${escapar(conta.nome)}</option>`).join("")}`;
-  seletor.disabled = contas.length === 0;
-  if (contas.some(conta => conta.nome === selecionado)) seletor.value = selecionado;
+  const nomes = contas.map(conta => String(conta?.name ?? conta?.nome ?? "").trim()).filter(Boolean);
+  seletor.innerHTML = `<option value="">Selecione seu nome</option>${nomes.map(nome => `<option value="${escapar(nome)}">${escapar(nome)}</option>`).join("")}`;
+  seletor.disabled = nomes.length === 0;
+  const nomeSelecionado = nomes.find(nome => nome.toLocaleLowerCase("pt-BR") === selecionado.trim().toLocaleLowerCase("pt-BR"));
+  if (nomeSelecionado) seletor.value = nomeSelecionado;
 }
 function renderizarEquipe() {
   const lista = document.querySelector("#team-list");
