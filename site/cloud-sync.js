@@ -121,6 +121,9 @@
   async function adicionarInstrutor(name, pin) {
     return funcao("add-instructor", { name, pin }, true);
   }
+  async function gerenciarInstrutor(memberId, action, name = "", pin) {
+    return funcao("manage-instructor", { member_id: memberId, action, name, pin }, true);
+  }
   async function solicitarRedefinicao(code) {
     return funcao("request-pin-reset", { team_code: code });
   }
@@ -237,7 +240,7 @@
   window.addEventListener("online", () => sync().catch(() => {}));
   window.PequenosConstrutoresCloud = {
     configurado, lerSessao, salvarSessao, limparSessao, lerCodigoEquipe, salvarCodigoEquipe,
-    listarMembros, login, configurarEquipe, adicionarInstrutor, solicitarRedefinicao,
+    listarMembros, login, configurarEquipe, adicionarInstrutor, gerenciarInstrutor, solicitarRedefinicao,
     redefinirPin, carregarMembrosAutenticados, sync, scheduleSync
   };
 })();

@@ -36,6 +36,8 @@ let criancaNovaId = "";
 let retornarAosRegistros = false;
 let toastTimer;
 let urlsMomentos = [];
+let mostrarCriancasArquivadas = false;
+let instrutorEditandoId = "";
 
 function lerRegistros() { try { return JSON.parse(localStorage.getItem(CHAVE) || "[]"); } catch { return []; } }
 function lerDescricoes() { try { return JSON.parse(localStorage.getItem(CHAVE_DESCRICOES) || "{}"); } catch { return {}; } }
@@ -58,7 +60,70 @@ function renderizarEquipe() {
   if (!lista) return;
   const contas = membrosRemotos.length ? membrosRemotos : instrutores;
   document.querySelector("#team-count").textContent = `${contas.length} ${contas.length === 1 ? "instrutor" : "instrutores"}`;
-  lista.innerHTML = contas.length ? contas.map(conta => `<article class="team-account"><div class="team-account-main"><span class="team-account-icon" aria-hidden="true">${conta.role === "principal" || conta.papel === "principal" ? "✦" : "♙"}</span><span class="team-account-info"><strong>${escapar(conta.name || conta.nome)}</strong><small>${conta.role === "principal" || conta.papel === "principal" ? "Conta principal · gerencia missões e equipe" : "Instrutor · registros e acompanhamento"}</small></span></div><span class="team-role">${conta.role === "principal" || conta.papel === "principal" ? "Principal" : "Instrutor"}</span></article>`).join("") : `<div class="empty-state"><p>Nenhum instrutor cadastrado.</p></div>`;
+  lista.innerHTML = contas.length ? contas.map(conta => { const principal = conta.role === "principal" || conta.papel === "principal"; const nome = conta.name || conta.nome; return `<article class="team-account"><div class="team-account-main"><span class="team-account-icon" aria-hidden="true">${principal ? "✦" : "♙"}</span><span class="team-account-info"><strong>${escapar(nome)}</strong><small>${principal ? "Conta principal · gerencia missões e equipe" : "Instrutor · registros e acompanhamento"}</small></span></div><div class="team-account-actions"><span class="team-role">${principal ? "Principal" : "Instrutor"}</span>${principal ? "" : `<button class="secondary-button" type="button" data-edit-instructor="${escapar(conta.id)}">Editar</button><button class="remove-child-button" type="button" data-delete-instructor="${escapar(conta.id)}">Remover</button>`}</div></article>`; }).join("") : `<div class="empty-state"><p>Nenhum instrutor cadastrado.</p></div>`;
+}
+function abrirEdicaoInstrutor(id) {
+  const conta = membrosRemotos.length ? membrosRemotos.find(item => item.id === id) : instrutores.find(item => item.id === id);
+  if (!conta || conta.role === "principal" || conta.papel === "principal") return;
+  instrutorEditandoId = id;
+  document.querySelector("#edit-instructor-name").value = conta.name || conta.nome || "";
+  document.querySelector("#edit-instructor-pin").value = "";
+  document.querySelector("#edit-instructor-pin-confirm").value = "";
+  document.querySelector("#edit-instructor-feedback").textContent = "";
+  document.querySelector("#edit-instructor-dialog").showModal();
+}
+async function salvarEdicaoInstrutor(evento) {
+  evento.preventDefault();
+  const feedback = document.querySelector("#edit-instructor-feedback");
+  const nome = document.querySelector("#edit-instructor-name").value.trim();
+  const pin = document.querySelector("#edit-instructor-pin").value;
+  const confirmacao = document.querySelector("#edit-instructor-pin-confirm").value;
+  const contas = membrosRemotos.length ? membrosRemotos : instrutores;
+  const atual = contas.find(item => item.id === instrutorEditandoId);
+  if (!atual || atual.role === "principal" || atual.papel === "principal") { feedback.textContent = "Esta conta não pode ser alterada por aqui."; return; }
+  if (nome.length < 2) { feedback.textContent = "Informe um nome com pelo menos 2 caracteres."; return; }
+  if (contas.some(item => item.id !== instrutorEditandoId && (item.name || item.nome || "").toLocaleLowerCase("pt-BR") === nome.toLocaleLowerCase("pt-BR"))) { feedback.textContent = "Já existe uma conta com esse nome."; return; }
+  if (pin && !/^\\d{4}$/.test(pin)) { feedback.textContent = "O PIN deve ter exatamente 4 dígitos."; return; }
+  if (pin && pin !== confirmacao) { feedback.textContent = "Os PINs não coincidem."; return; }
+  try {
+    if (membrosRemotos.length) {
+      if (!navigator.onLine) { feedback.textContent = "Conecte-se à internet para alterar o acesso compartilhado."; return; }
+      await NUVEM.gerenciarInstrutor(instrutorEditandoId, "editar", nome, pin || undefined);
+      const local = instrutores.find(item => item.id === instrutorEditandoId);
+      if (local) {
+        local.nome = nome;
+        if (pin) { const credencial = await derivarSenha(pin); local.sal = credencial.sal; local.resumo = credencial.resumo; }
+        salvarInstrutores();
+      }
+      membrosRemotos = await NUVEM.carregarMembrosAutenticados();
+    } else {
+      const local = instrutores.find(item => item.id === instrutorEditandoId);
+      if (!local) return;
+      local.nome = nome;
+      if (pin) { const credencial = await derivarSenha(pin); local.sal = credencial.sal; local.resumo = credencial.resumo; }
+      salvarInstrutores();
+    }
+    renderizarListaInstrutores(); renderizarEquipe();
+    document.querySelector("#edit-instructor-dialog").close();
+    mostrarToast("Acesso do instrutor atualizado.");
+  } catch (erro) { feedback.textContent = erro?.message || "Não foi possível atualizar esse acesso."; }
+}
+async function removerInstrutor(id) {
+  const contas = membrosRemotos.length ? membrosRemotos : instrutores;
+  const conta = contas.find(item => item.id === id);
+  const nome = conta?.name || conta?.nome;
+  if (!conta || conta.role === "principal" || conta.papel === "principal") return;
+  if (!confirm(`Remover o acesso de ${nome}? Essa pessoa não poderá mais entrar. Os registros das crianças serão mantidos.`)) return;
+  try {
+    if (membrosRemotos.length) {
+      if (!navigator.onLine) { mostrarToast("Conecte-se à internet para remover o acesso compartilhado."); return; }
+      await NUVEM.gerenciarInstrutor(id, "remover");
+      membrosRemotos = await NUVEM.carregarMembrosAutenticados();
+    }
+    instrutores = instrutores.filter(item => item.id !== id); salvarInstrutores();
+    renderizarListaInstrutores(); renderizarEquipe();
+    mostrarToast(`Acesso de ${nome} removido.`);
+  } catch (erro) { mostrarToast(erro?.message || "Não foi possível remover esse acesso."); }
 }
 async function salvarCredencialLocal(id, nome, senha, papel) {
   const credencial = await derivarSenha(senha);
@@ -319,12 +384,13 @@ function lerCriancas() {
   try {
     const salvas = JSON.parse(localStorage.getItem(CHAVE_CRIANCAS) || "null");
     if (!Array.isArray(salvas)) return [];
-    return salvas.filter(salva => salva && typeof salva.id === "string" && !registroDeCriancaVazioLegado(salva)).slice(0, LIMITE_CRIANCAS).map(salva => ({
+    return salvas.filter(salva => salva && typeof salva.id === "string" && !registroDeCriancaVazioLegado(salva)).map(salva => ({
       id: salva.id,
       nome: typeof salva.nome === "string" ? salva.nome : "",
       idade: Math.min(12, Math.max(6, Number(salva.idade) || 6)),
       igreja: typeof salva.igreja === "string" ? salva.igreja : "",
-      categoriaRepresentativa: CATEGORIAS.some(categoria => categoria.id === salva.categoriaRepresentativa) ? salva.categoriaRepresentativa : ""
+      categoriaRepresentativa: CATEGORIAS.some(categoria => categoria.id === salva.categoriaRepresentativa) ? salva.categoriaRepresentativa : "",
+      arquivada: Boolean(salva.arquivada)
     }));
   } catch { return []; }
 }
@@ -361,11 +427,11 @@ function iconeBordado(categoria, pequeno = false) {
 function renderizarCriancas(filtro = "") {
   const lista = document.querySelector("#child-list");
   const termo = filtro.trim().toLocaleLowerCase("pt-BR");
-  const cadastradas = CRIANCAS.filter(crianca => !crianca.nova);
+  const cadastradas = CRIANCAS.filter(crianca => !crianca.nova && !crianca.arquivada);
   const totalCriancas = document.querySelector("#children-count");
   if (totalCriancas) totalCriancas.textContent = `${cadastradas.length}/${LIMITE_CRIANCAS}`;
   const atalhoAdicionar = document.querySelector("#add-child-from-record");
-  if (atalhoAdicionar) atalhoAdicionar.disabled = CRIANCAS.length >= LIMITE_CRIANCAS;
+  if (atalhoAdicionar) atalhoAdicionar.disabled = CRIANCAS.filter(crianca => !crianca.nova && !crianca.arquivada).length + CRIANCAS.filter(crianca => crianca.nova).length >= LIMITE_CRIANCAS;
   const encontradas = cadastradas.filter(c => `${nomeCrianca(c)} ${c.idade} ${c.igreja} ${CATEGORIAS.find(cat => cat.id === c.categoriaRepresentativa)?.nome || ""} ${c.id}`.toLocaleLowerCase("pt-BR").includes(termo));
   lista.innerHTML = encontradas.length ? encontradas.map(c => {
     const total = totalMissoesConcluidas(c);
@@ -428,15 +494,19 @@ function totalMissoesConcluidas(crianca) { return CATEGORIAS.reduce((total, cate
 function totalMissoesDisponiveis() { return CATEGORIAS.reduce((total, categoria) => total + (CATALOGO[categoria.id] || []).length, 0); }
 function renderizarCadastroCriancas() {
   const editor = document.querySelector("#children-editor");
-  editor.innerHTML = CRIANCAS.length ? CRIANCAS.map(crianca => `<div class="child-edit-row ${crianca.nova ? "new-child-row" : ""}"><span class="child-edit-number">#${crianca.id.slice(-2)}</span><label class="child-name-field"><span>Nome</span><input type="text" maxlength="70" data-child-name="${crianca.id}" value="${escapar(crianca.nome)}" placeholder="Nome da criança"></label><label class="child-age-field"><span>Idade</span><select data-child-age="${crianca.id}"><option value="" disabled ${crianca.idade ? "" : "selected"}>Selecione</option>${Array.from({ length: 7 }, (_, i) => `<option value="${i + 6}" ${crianca.idade === i + 6 ? "selected" : ""}>${i + 6} anos</option>`).join("")}</select></label><label class="child-church-field"><span>Igreja</span><input type="text" maxlength="100" data-child-church="${crianca.id}" value="${escapar(crianca.igreja)}" placeholder="Nome da igreja"></label><label class="child-category-field"><span>Categoria representativa</span><select data-child-category="${crianca.id}"><option value="">Sem categoria</option>${CATEGORIAS.map(categoria => `<option value="${categoria.id}" ${crianca.categoriaRepresentativa === categoria.id ? "selected" : ""}>${categoria.nome}</option>`).join("")}</select></label>${crianca.nova ? `<button type="button" class="remove-child-button" data-remove-child="${crianca.id}">Cancelar</button>` : ""}</div>`).join("") : `<div class="empty-state"><span aria-hidden="true">♙</span><p>Nenhuma criança cadastrada ainda. Use “Adicionar criança” para começar.</p></div>`;
+  const exibidas = CRIANCAS.filter(crianca => Boolean(crianca.arquivada) === mostrarCriancasArquivadas);
+  const alternar = document.querySelector("#toggle-archived-children");
+  alternar.textContent = mostrarCriancasArquivadas ? "Ver crianças ativas" : `Ver arquivadas (${CRIANCAS.filter(crianca => crianca.arquivada).length})`;
+  alternar.setAttribute("aria-pressed", String(mostrarCriancasArquivadas));
+  editor.innerHTML = exibidas.length ? exibidas.map(crianca => `<div class="child-edit-row ${crianca.nova ? "new-child-row" : ""} ${crianca.arquivada ? "archived-child-row" : ""}"><span class="child-edit-number">#${crianca.id.slice(-2)}</span><label class="child-name-field"><span>Nome</span><input type="text" maxlength="70" data-child-name="${crianca.id}" value="${escapar(crianca.nome)}" placeholder="Nome da criança"></label><label class="child-age-field"><span>Idade</span><select data-child-age="${crianca.id}"><option value="" disabled ${crianca.idade ? "" : "selected"}>Selecione</option>${Array.from({ length: 7 }, (_, i) => `<option value="${i + 6}" ${crianca.idade === i + 6 ? "selected" : ""}>${i + 6} anos</option>`).join("")}</select></label><label class="child-church-field"><span>Igreja</span><input type="text" maxlength="100" data-child-church="${crianca.id}" value="${escapar(crianca.igreja)}" placeholder="Nome da igreja"></label><label class="child-category-field"><span>Categoria representativa</span><select data-child-category="${crianca.id}"><option value="">Sem categoria</option>${CATEGORIAS.map(categoria => `<option value="${categoria.id}" ${crianca.categoriaRepresentativa === categoria.id ? "selected" : ""}>${categoria.nome}</option>`).join("")}</select></label>${crianca.nova ? `<button type="button" class="remove-child-button" data-remove-child="${crianca.id}">Cancelar</button>` : crianca.arquivada ? `<button type="button" class="secondary-button child-roster-action" data-restore-child="${crianca.id}">Restaurar</button>` : `<button type="button" class="remove-child-button child-roster-action" data-archive-child="${crianca.id}">Arquivar</button>`}</div>`).join("") : `<div class="empty-state"><span aria-hidden="true">♙</span><p>${mostrarCriancasArquivadas ? "Nenhuma criança arquivada." : "Nenhuma criança ativa cadastrada ainda. Use “Adicionar criança” para começar."}</p></div>`;
   document.querySelectorAll("[data-child-church]").forEach(campo => campo.setAttribute("list", "church-options"));
   renderizarListaIgrejas();
-  document.querySelector("#add-child").disabled = CRIANCAS.length >= LIMITE_CRIANCAS;
+  document.querySelector("#add-child").disabled = CRIANCAS.filter(crianca => !crianca.arquivada).length >= LIMITE_CRIANCAS;
   document.querySelector("#save-children").disabled = !CRIANCAS.length;
   renderizarCriancas(document.querySelector("#child-search").value);
 }
 function adicionarCrianca() {
-  if (CRIANCAS.length >= LIMITE_CRIANCAS) { document.querySelector("#children-feedback").textContent = "O grupo já atingiu o limite de 30 crianças."; return; }
+  if (CRIANCAS.filter(crianca => !crianca.arquivada).length >= LIMITE_CRIANCAS) { document.querySelector("#children-feedback").textContent = "O grupo já atingiu o limite de 30 crianças ativas."; return; }
   const usados = new Set(CRIANCAS.map(crianca => Number(crianca.id.match(/(\d+)$/)?.[1])).filter(Boolean));
   let numero = 1; while (usados.has(numero) && numero <= LIMITE_CRIANCAS) numero++;
   const id = `crianca-${String(numero).padStart(2, "0")}`;
@@ -444,6 +514,25 @@ function adicionarCrianca() {
   criancaNovaId = id;
   renderizarCadastroCriancas();
   document.querySelector(`[data-child-name="${id}"]`).focus();
+}
+function definirArquivoCrianca(id, arquivada) {
+  const crianca = CRIANCAS.find(item => item.id === id && !item.nova);
+  if (!crianca) return;
+  if (arquivada && !confirm(`Arquivar ${nomeCrianca(crianca)}? Ela sairá das listas de registro. Missões, pontos e histórico serão preservados e poderão ser consultados.`)) return;
+  const nome = document.querySelector(`[data-child-name="${id}"]`)?.value.trim();
+  const idade = Number(document.querySelector(`[data-child-age="${id}"]`)?.value);
+  const igreja = document.querySelector(`[data-child-church="${id}"]`)?.value.trim();
+  const categoria = document.querySelector(`[data-child-category="${id}"]`)?.value;
+  if (nome) Object.assign(crianca, { nome, igreja: igreja ?? crianca.igreja, categoriaRepresentativa: categoria ?? crianca.categoriaRepresentativa });
+  if (idade >= 6 && idade <= 12) crianca.idade = idade;
+  crianca.arquivada = arquivada;
+  try {
+    localStorage.setItem(CHAVE_CRIANCAS, JSON.stringify(CRIANCAS.map(({ nova, ...item }) => item)));
+    agendarSincronizacao();
+    mostrarCriancasArquivadas = arquivada;
+    renderizarCadastroCriancas(); renderizarPodio(); renderizarProgresso(document.querySelector("#progress-search").value);
+    document.querySelector("#children-feedback").textContent = arquivada ? `${nomeCrianca(crianca)} foi arquivada. O histórico foi mantido.` : `${nomeCrianca(crianca)} voltou à lista ativa.`;
+  } catch { crianca.arquivada = !arquivada; document.querySelector("#children-feedback").textContent = "Não foi possível atualizar o cadastro neste aparelho."; }
 }
 function cancelarNovaCrianca(id) {
   const crianca = CRIANCAS.find(item => item.id === id);
@@ -462,10 +551,10 @@ function renderizarListaIgrejas() {
 function salvarCadastroCriancas() {
   const valores = CRIANCAS.map(crianca => ({
     crianca,
-    nome: document.querySelector(`[data-child-name="${crianca.id}"]`).value.trim(),
-    idade: Number(document.querySelector(`[data-child-age="${crianca.id}"]`).value),
-    igreja: document.querySelector(`[data-child-church="${crianca.id}"]`).value.trim(),
-    categoriaRepresentativa: document.querySelector(`[data-child-category="${crianca.id}"]`).value
+    nome: (document.querySelector(`[data-child-name="${crianca.id}"]`)?.value ?? crianca.nome).trim(),
+    idade: Number(document.querySelector(`[data-child-age="${crianca.id}"]`)?.value ?? crianca.idade),
+    igreja: (document.querySelector(`[data-child-church="${crianca.id}"]`)?.value ?? crianca.igreja).trim(),
+    categoriaRepresentativa: document.querySelector(`[data-child-category="${crianca.id}"]`)?.value ?? crianca.categoriaRepresentativa
   }));
   const semNome = valores.find(item => !item.nome);
   if (semNome) {
@@ -559,7 +648,7 @@ function renderizarResumo() {
   }).join("");
 }
 function renderizarHome() {
-  const cadastradas = CRIANCAS.filter(crianca => !crianca.nova);
+  const cadastradas = CRIANCAS.filter(crianca => !crianca.nova && !crianca.arquivada);
   document.querySelector("#home-children-count").textContent = `${cadastradas.length}/${LIMITE_CRIANCAS}`;
   document.querySelector("#home-record-count").textContent = String(registros.length);
   document.querySelector("#home-pending-count").textContent = String(registros.filter(registro => !registro.sincronizado).length);
@@ -657,7 +746,7 @@ function pontosDeMissoes(criancaId) { return registros.filter(registro => regist
 function pontosExtrasDaCrianca(criancaId) { return pontosExtras.filter(registro => registro.criancaId === criancaId).reduce((total, registro) => total + registro.pontos, 0); }
 function pontuacaoDaCrianca(criancaId) { return pontosDeMissoes(criancaId) + pontosExtrasDaCrianca(criancaId); }
 function renderizarPodio() {
-  const criancas = CRIANCAS.filter(crianca => !crianca.nova).map(crianca => ({
+  const criancas = CRIANCAS.filter(crianca => !crianca.nova && !crianca.arquivada).map(crianca => ({
     ...crianca,
     pontosMissoes: pontosDeMissoes(crianca.id),
     pontosExtras: pontosExtrasDaCrianca(crianca.id)
@@ -723,7 +812,7 @@ function renderizarProgresso(filtro = document.querySelector("#progress-search")
     const totalMissoes = CATEGORIAS.reduce((soma, categoria) => soma + (CATALOGO[categoria.id] || []).length, 0);
     const nomeDestaque = totalConcluidas ? "has-progress" : "";
     const progressoCompleto = totalConcluidas >= totalMissoes ? "complete" : "";
-    return `<article class="child-progress-card"><div class="child-progress-card-heading"><div class="child-progress-person"><span class="progress-child-avatar ${nomeDestaque} ${progressoCompleto}">${escapar(crianca.id.slice(-2))}</span><div class="child-progress-person-info"><div class="child-progress-name-line ${nomeDestaque} ${progressoCompleto}"><h3>${escapar(nomeCrianca(crianca))}</h3>${representativa ? `<span class="child-representative-mark" title="Categoria representativa: ${escapar(representativa.nome)}">${iconeBordado(representativa, true)}</span>` : ""}</div><p>${crianca.idade} anos · ${escapar(crianca.igreja || "Igreja não informada")}</p></div></div><strong class="child-progress-total ${nomeDestaque} ${progressoCompleto}">${Math.min(totalConcluidas, totalMissoes)}<small>/${totalMissoes}</small></strong></div><div class="child-progress-categories">${detalhes}</div></article>`;
+    return `<article class="child-progress-card"><div class="child-progress-card-heading"><div class="child-progress-person"><span class="progress-child-avatar ${nomeDestaque} ${progressoCompleto}">${escapar(crianca.id.slice(-2))}</span><div class="child-progress-person-info"><div class="child-progress-name-line ${nomeDestaque} ${progressoCompleto}"><h3>${escapar(nomeCrianca(crianca))}</h3>${crianca.arquivada ? `<span class="team-role">Arquivada</span>` : ""}${representativa ? `<span class="child-representative-mark" title="Categoria representativa: ${escapar(representativa.nome)}">${iconeBordado(representativa, true)}</span>` : ""}</div><p>${crianca.idade} anos · ${escapar(crianca.igreja || "Igreja não informada")}</p></div></div><strong class="child-progress-total ${nomeDestaque} ${progressoCompleto}">${Math.min(totalConcluidas, totalMissoes)}<small>/${totalMissoes}</small></strong></div><div class="child-progress-categories">${detalhes}</div></article>`;
   }).join("");
 }
 function renderizarRegistros() {
@@ -817,8 +906,10 @@ document.querySelector("#memories-gallery").addEventListener("click", evento => 
 document.querySelector("#save-children").addEventListener("click", salvarCadastroCriancas);
 document.querySelector("#add-child").addEventListener("click", () => adicionarCrianca());
 document.querySelector("#children-editor").addEventListener("click", e => { const botao = e.target.closest("[data-remove-child]"); if (botao) cancelarNovaCrianca(botao.dataset.removeChild); });
+document.querySelector("#children-editor").addEventListener("click", e => { const arquivar = e.target.closest("[data-archive-child]"); const restaurar = e.target.closest("[data-restore-child]"); if (arquivar) definirArquivoCrianca(arquivar.dataset.archiveChild, true); else if (restaurar) definirArquivoCrianca(restaurar.dataset.restoreChild, false); });
+document.querySelector("#toggle-archived-children").addEventListener("click", () => { mostrarCriancasArquivadas = !mostrarCriancasArquivadas; renderizarCadastroCriancas(); });
 document.querySelector("#add-child-from-record").addEventListener("click", () => {
-  if (CRIANCAS.length >= LIMITE_CRIANCAS) { document.querySelector("#form-feedback").textContent = "O grupo já atingiu o limite de 30 crianças."; return; }
+  if (CRIANCAS.filter(crianca => !crianca.arquivada).length >= LIMITE_CRIANCAS) { document.querySelector("#form-feedback").textContent = "O grupo já atingiu o limite de 30 crianças ativas."; return; }
   retornarAosRegistros = true; mostrarArea("view-children"); adicionarCrianca();
 });
 document.querySelector("#children-editor").addEventListener("input", e => { if (e.target.closest("[data-child-church]")) renderizarListaIgrejas(); });
@@ -829,6 +920,9 @@ document.querySelector("#delete-edit-record").addEventListener("click", excluirR
 document.querySelectorAll(".auth-tab").forEach(botao => botao.addEventListener("click", () => alternarAbaAcesso(botao.dataset.auth)));
 document.querySelector("#register-form").addEventListener("submit", cadastrarInstrutor);
 document.querySelector("#team-form").addEventListener("submit", adicionarInstrutorEquipe);
+document.querySelector("#team-list").addEventListener("click", evento => { const editar = evento.target.closest("[data-edit-instructor]"); const remover = evento.target.closest("[data-delete-instructor]"); if (editar) abrirEdicaoInstrutor(editar.dataset.editInstructor); else if (remover) removerInstrutor(remover.dataset.deleteInstructor); });
+document.querySelector("#edit-instructor-form").addEventListener("submit", salvarEdicaoInstrutor);
+document.querySelector("#cancel-edit-instructor").addEventListener("click", () => document.querySelector("#edit-instructor-dialog").close());
 document.querySelector("#login-form").addEventListener("submit", entrarInstrutor);
 document.querySelector("#cloud-setup-form").addEventListener("submit", ativarCompartilhamento);
 document.querySelector("#forgot-pin-button").addEventListener("click", pedirRedefinicaoPin);

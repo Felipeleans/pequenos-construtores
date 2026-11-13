@@ -93,7 +93,6 @@
       <button type="button" class="section-tab" data-view="view-children">Cadastro crianças</button>
       <button type="button" class="section-tab" data-view="view-missions">Missões</button>
       <button type="button" class="section-tab" id="team-tab" data-view="view-team" hidden>Equipe</button>
-      <button type="button" class="section-tab" data-view="view-updates">Atualizações</button>
     </nav>
     <section id="view-home" class="app-view active">
       <section class="panel home-summary-hero">
@@ -149,7 +148,7 @@
     </section>
     <section id="view-children" class="app-view" hidden>
       <div class="welcome-row"><div><p class="eyebrow">CADASTRO</p><h1>Crianças</h1><p class="intro">Edite o nome, a idade e a igreja de cada criança. O protótipo mantém 30 cadastros.</p></div><span class="step-pill">30 crianças</span></div>
-      <section class="panel roster-panel"><div class="panel-heading"><div><p class="eyebrow">DADOS DO GRUPO</p><h2>Cadastro das crianças</h2></div><div class="roster-actions"><button class="add-child-button" type="button" id="add-child">+ Adicionar criança</button><button class="primary-button compact-button" type="button" id="save-children">Salvar cadastro</button></div></div><p class="roster-hint">Cadastre uma criança por vez, até o limite de 30. No campo Igreja, escolha um nome já usado ou digite um novo.</p><div id="children-editor" class="children-editor"></div><datalist id="church-options"></datalist><p id="children-feedback" class="form-feedback" role="status" aria-live="polite"></p></section>
+      <section class="panel roster-panel"><div class="panel-heading"><div><p class="eyebrow">DADOS DO GRUPO</p><h2>Cadastro das crianças</h2></div><div class="roster-actions"><button class="secondary-button" type="button" id="toggle-archived-children" aria-pressed="false">Ver crianças arquivadas</button><button class="add-child-button" type="button" id="add-child">+ Adicionar criança</button><button class="primary-button compact-button" type="button" id="save-children">Salvar cadastro</button></div></div><p class="roster-hint">Cadastre uma criança por vez, até o limite de 30 ativas. Ao arquivar, os registros e pontos são preservados e podem ser restaurados.</p><div id="children-editor" class="children-editor"></div><datalist id="church-options"></datalist><p id="children-feedback" class="form-feedback" role="status" aria-live="polite"></p></section>
     </section>
     <section id="view-progress" class="app-view" hidden>
       <div class="welcome-row"><div><p class="eyebrow">ACOMPANHAMENTO INDIVIDUAL</p><h1>Progresso das crianças</h1><p class="intro">Veja as conquistas de cada criança por categoria.</p></div><span class="step-pill">4 categorias</span></div>
@@ -179,22 +178,10 @@
       <div id="missions-editor" class="missions-editor"></div>
       <p id="missions-feedback" class="form-feedback" role="status" aria-live="polite"></p>
     </section>
-    <section id="view-updates" class="app-view" hidden>
-      <div class="welcome-row"><div><p class="eyebrow">NOVIDADES DO PROJETO</p><h1>Atualizações</h1><p class="intro">Acompanhe as melhorias já feitas e as próximas mudanças do Pequenos Construtores.</p></div><span class="step-pill">Novidades</span></div>
-      <section class="panel updates-panel"><div class="panel-heading"><div><p class="eyebrow">MELHORIAS RECENTES</p><h2>O que há de novo</h2></div><span class="passport-icon" aria-hidden="true">✦</span></div>
-        <div class="updates-list">
-          <article class="update-card"><span class="update-mark">01</span><div><h3>Pódio e pontos extras</h3><p>O pódio soma um ponto por missão concluída e os pontos extras concedidos pelos instrutores.</p></div></article>
-          <article class="update-card"><span class="update-mark">02</span><div><h3>Busca de pontuação</h3><p>Pesquise por criança ou igreja para consultar pontos de missões, pontos extras e o total, junto com os motivos dos extras.</p></div></article>
-          <article class="update-card"><span class="update-mark">03</span><div><h3>Registro e progresso individuais</h3><p>Consulte o avanço de cada criança nas quatro categorias e edite ou exclua registros quando necessário.</p></div></article>
-          <article class="update-card"><span class="update-mark">04</span><div><h3>Equipe de instrutores</h3><p>A Conta principal pode adicionar mais instrutores, cada um com nome e PIN próprios, para usar o painel neste aparelho.</p></div></article>
-        </div>
-      </section>
-      <section class="updates-future"><span class="updates-future-icon" aria-hidden="true">↻</span><div><h2>Próximas atualizações</h2><p>Novas melhorias e mudanças do aplicativo serão apresentadas nesta área.</p></div></section>
-    </section>
     <section id="view-team" class="app-view" hidden>
       <div class="welcome-row"><div><p class="eyebrow">ACESSOS DO PAINEL</p><h1>Equipe de instrutores</h1><p class="intro">Inclua mais pessoas para registrar e acompanhar as missões neste aparelho.</p></div><span class="step-pill" id="team-count">0 instrutores</span></div>
       <section class="panel team-cloud-panel" id="team-cloud-setup">
-        <div class="panel-heading"><div><p class="eyebrow">DADOS COMPARTILHADOS</p><h2>Ativar sincronização entre aparelhos</h2></div><span class="passport-icon" aria-hidden="true">↻</span></div>
+        <div class="panel-heading"><div><p class="eyebrow">DADOS COMPARTILHADOS</p><h2>Ativar sincronização entre aparelhos</h2></div><span class="passport-icon" aria-hidden="true">☁</span></div>
         <p class="side-copy">Cadastre a equipe uma vez. A Conta 1 recebe os links de recuperação de PIN e pode redefinir os PINs dos demais instrutores.</p>
         <form id="cloud-setup-form" class="team-form cloud-setup-form">
           <label for="cloud-team-name">Nome da equipe</label><input id="cloud-team-name" type="text" value="Pequenos Construtores" maxlength="100" required>
@@ -222,6 +209,17 @@
     </section>
     <footer><span>Pequenos Construtores</span><span>Dados guardados offline e sincronizados com a equipe quando há internet.</span></footer>
   </main>
+  <dialog id="edit-instructor-dialog" class="management-dialog" aria-labelledby="edit-instructor-title">
+    <form id="edit-instructor-form" class="team-form">
+      <div><p class="eyebrow">ACESSOS DA EQUIPE</p><h2 id="edit-instructor-title">Editar instrutor</h2></div>
+      <label for="edit-instructor-name">Nome do instrutor</label><input id="edit-instructor-name" type="text" maxlength="70" required>
+      <label for="edit-instructor-pin">Novo PIN (opcional)</label><input id="edit-instructor-pin" type="password" inputmode="numeric" pattern="[0-9]{4}" minlength="4" maxlength="4" autocomplete="new-password">
+      <label for="edit-instructor-pin-confirm">Confirme o novo PIN</label><input id="edit-instructor-pin-confirm" type="password" inputmode="numeric" pattern="[0-9]{4}" minlength="4" maxlength="4" autocomplete="new-password">
+      <small>Deixe os campos de PIN vazios para manter o PIN atual.</small>
+      <p id="edit-instructor-feedback" class="form-feedback" role="status" aria-live="polite"></p>
+      <div class="management-dialog-actions"><button id="cancel-edit-instructor" class="secondary-button" type="button">Cancelar</button><button class="primary-button" type="submit">Salvar alterações</button></div>
+    </form>
+  </dialog>
   <div id="toast" class="toast" role="status" aria-live="polite"></div>
   <script src="cloud-config.js" defer></script>
   <script src="cloud-sync.js" defer></script>
