@@ -1,11 +1,15 @@
-# Publicação do Pequenos Construtores
+# Pequenos Construtores
 
-Esta pasta contém a versão estática do PWA dentro de `site/`, preparada para GitHub Pages.
+PWA em português do Brasil para acompanhar missões individuais de crianças, progresso por categoria, registros, pontos extras e momentos da jornada.
 
 ## Publicação
 
-1. Envie o conteúdo desta pasta para um repositório GitHub chamado `pequenos-construtores`.
-2. Em Settings → Pages, escolha GitHub Actions como origem da publicação.
-3. A ação `Publicar o Pequenos Construtores` publica automaticamente a cada envio para `main`.
+A pasta `site/` é publicada no GitHub Pages. Depois de cada envio para a branch `main`, a ação **Publicar o Pequenos Construtores** atualiza o site HTTPS.
 
-O app funciona como site estático e guarda contas, dados e mídias no armazenamento local do navegador. Esses dados não sincronizam entre dispositivos. O código do site ficará público no repositório, como é normal em páginas gratuitas do GitHub Pages.
+## Sincronização entre aparelhos
+
+A versão do app pode sincronizar crianças, missões, registros e pontos extras entre os aparelhos da equipe, mantendo o uso offline e sincronizando as mudanças quando a internet voltar. O login usa nome e PIN individual de quatro dígitos, protegido pelo servidor. A Conta 1 recebe o link de recuperação e pode redefinir PINs.
+
+Para ativar a nuvem, cadastre os quatro segredos do GitHub Actions e siga [supabase/COMO-PUBLICAR.md](supabase/COMO-PUBLICAR.md). O arquivo `supabase-bundle.zip` contém as funções e a estrutura protegida do banco usadas por essa publicação. Chaves administrativas nunca ficam no site.
+
+Fotos e vídeos de “Momentos da jornada” ficam neste aparelho e não sincronizam.
