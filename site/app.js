@@ -38,7 +38,7 @@ let urlsMomentos = [];
 function lerRegistros() { try { return JSON.parse(localStorage.getItem(CHAVE) || "[]"); } catch { return []; } }
 function lerDescricoes() { try { return JSON.parse(localStorage.getItem(CHAVE_DESCRICOES) || "{}"); } catch { return {}; } }
 function lerPontosExtras() { try { const lista = JSON.parse(localStorage.getItem(CHAVE_PONTOS_EXTRAS) || "[]"); return Array.isArray(lista) ? lista.filter(item => item && typeof item.criancaId === "string" && Number.isSafeInteger(item.pontos) && item.pontos > 0) : []; } catch { return []; } }
-function lerInstrutores() { try { const lista = JSON.parse(localStorage.getItem(CHAVE_INSTRUTORES) || "[]"); return Array.isArray(lista) ? lista.slice(0, 2) : []; } catch { return []; } }
+function lerInstrutores() { try { const lista = JSON.parse(localStorage.getItem(CHAVE_INSTRUTORES) || "[]"); return Array.isArray(lista) ? lista : []; } catch { return []; } }
 function salvarPontosExtras() { localStorage.setItem(CHAVE_PONTOS_EXTRAS, JSON.stringify(pontosExtras)); }
 function salvarInstrutores() { localStorage.setItem(CHAVE_INSTRUTORES, JSON.stringify(instrutores)); }
 function ehInstrutorPrincipal() { return usuarioAtual?.papel === "principal"; }
@@ -48,6 +48,12 @@ function renderizarListaInstrutores() {
   seletor.innerHTML = `<option value="">Selecione seu nome</option>${instrutores.map(conta => `<option value="${escapar(conta.nome)}">${escapar(conta.nome)}</option>`).join("")}`;
   seletor.disabled = instrutores.length === 0;
   if (instrutores.some(conta => conta.nome === selecionado)) seletor.value = selecionado;
+}
+function renderizarEquipe() {
+  const lista = document.querySelector("#team-list");
+  if (!lista) return;
+  document.querySelector("#team-count").textContent = `${instrutores.length} ${instrutores.length === 1 ? "instrutor" : "instrutores"}`;
+  lista.innerHTML = instrutores.length ? instrutores.map(conta => `<article class="team-account"><div class="team-account-main"><span class="team-account-icon" aria-hidden="true">${conta.papel === "principal" ? "✦" : "♙"}</span><span class="team-account-info"><strong>${escapar(conta.nome)}</strong><small>${conta.papel === "principal" ? "Conta principal · gerencia missões e equipe" : "Instrutor · registros e acompanhamento"}</small></span></div><span class="team-role">${conta.papel === "principal" ? "Principal" : "Instrutor"}</span></article>`).join("") : `<div class="empty-state"><p>Nenhum instrutor cadastrado.</p></div>`;
 }
 function codificarBase64(bytes) { return btoa(String.fromCharCode(...new Uint8Array(bytes))); }
 async function derivarSenha(senha, sal) {
@@ -65,7 +71,21 @@ function abrirSessao(instrutor) {
   document.querySelector("#login-screen").hidden = true;
   document.querySelector(".topbar").hidden = false;
   document.querySelector("#inicio").hidden = false;
+  document.querySelector("#team-tab").hidden = !ehInstrutorPrincipal();
+  renderizarEquipe();
+  if (!ehInstrutorPrincipal() && document.querySelector("#view-team").classList.contains("active")) mostrarArea("view-dashboard");
   renderizarDescricaoMissao(); renderizarEditorMissoes(); renderizarHome(); renderizarMomentos();
+}
+async function criarContaInstrutor(nome, senha, papel) {
+  const credencial = await derivarSenha(senha);
+  const conta = { id: crypto.randomUUID?.() || `instrutor-${Date.now()}-${Math.random()}`, nome, papel, sal: credencial.sal, resumo: credencial.resumo };
+  const contasAnteriores = instrutores;
+  instrutores = [...instrutores, conta];
+  try { salvarInstrutores(); }
+  catch (erro) { instrutores = contasAnteriores; throw erro; }
+  renderizarListaInstrutores();
+  renderizarEquipe();
+  return conta;
 }
 async function cadastrarInstrutor(evento) {
   evento.preventDefault();
@@ -73,26 +93,38 @@ async function cadastrarInstrutor(evento) {
   const nome = document.querySelector("#register-name").value.trim();
   const senha = document.querySelector("#register-password").value;
   const confirmacao = document.querySelector("#register-confirm").value;
-  if (instrutores.length >= 2) { status.textContent = "As duas contas de instrutor já foram cadastradas."; return; }
+  if (instrutores.length > 0) { status.textContent = "Entre na Conta principal e use a aba Equipe para adicionar instrutores."; return; }
   if (nome.length < 2) { status.textContent = "Informe o nome do instrutor."; return; }
   if (instrutores.some(item => item.nome.toLocaleLowerCase("pt-BR") === nome.toLocaleLowerCase("pt-BR"))) { status.textContent = "Esse nome já está cadastrado. Entre com a conta existente."; return; }
   if (!/^\d{4}$/.test(senha)) { status.textContent = "O PIN deve ter exatamente 4 dígitos numéricos."; return; }
   if (senha !== confirmacao) { status.textContent = "As senhas não coincidem."; return; }
   status.textContent = "Criando a conta...";
   try {
-    const credencial = await derivarSenha(senha);
-    const conta = { id: `instrutor-${Date.now()}`, nome, papel: instrutores.length === 0 ? "principal" : "instrutor", sal: credencial.sal, resumo: credencial.resumo };
-    instrutores = [...instrutores, conta];
-    salvarInstrutores();
-    renderizarListaInstrutores();
+    const conta = await criarContaInstrutor(nome, senha, "principal");
     document.querySelector("#register-password").value = "";
     document.querySelector("#register-confirm").value = "";
     abrirSessao(conta);
   } catch (erro) {
-    instrutores = lerInstrutores();
-    renderizarListaInstrutores();
     status.textContent = erro?.message || "Não foi possível cadastrar a conta neste aparelho.";
   }
+}
+async function adicionarInstrutorEquipe(evento) {
+  evento.preventDefault();
+  const status = document.querySelector("#team-feedback");
+  if (!ehInstrutorPrincipal()) { status.textContent = "Somente a Conta principal pode adicionar instrutores."; return; }
+  const nome = document.querySelector("#team-name").value.trim();
+  const senha = document.querySelector("#team-pin").value;
+  const confirmacao = document.querySelector("#team-pin-confirm").value;
+  if (nome.length < 2) { status.textContent = "Informe o nome do instrutor."; return; }
+  if (instrutores.some(item => item.nome.toLocaleLowerCase("pt-BR") === nome.toLocaleLowerCase("pt-BR"))) { status.textContent = "Esse nome já está cadastrado. Escolha outro nome."; return; }
+  if (!/^\d{4}$/.test(senha)) { status.textContent = "O PIN deve ter exatamente 4 dígitos numéricos."; return; }
+  if (senha !== confirmacao) { status.textContent = "Os PINs não coincidem."; return; }
+  status.textContent = "Criando o acesso...";
+  try {
+    await criarContaInstrutor(nome, senha, "instrutor");
+    document.querySelector("#team-form").reset();
+    status.textContent = `${nome} foi adicionado à equipe e já pode entrar com o próprio PIN.`;
+  } catch (erro) { status.textContent = erro?.message || "Não foi possível adicionar o instrutor neste aparelho."; }
 }
 async function entrarInstrutor(evento) {
   evento.preventDefault();
@@ -101,7 +133,7 @@ async function entrarInstrutor(evento) {
   const senha = document.querySelector("#login-password").value;
   if (!/^\d{4}$/.test(senha)) { status.textContent = "Digite seu PIN de 4 dígitos."; return; }
   const conta = instrutores.find(item => item.nome.toLocaleLowerCase("pt-BR") === nome);
-  if (!conta) { status.textContent = "Conta não encontrada. Confira o nome ou cadastre o instrutor."; return; }
+  if (!conta) { status.textContent = "Conta não encontrada. Confira o nome ou peça à Conta principal para cadastrar o acesso."; return; }
   status.textContent = "Verificando acesso...";
   try {
     const credencial = await derivarSenha(senha, conta.sal);
@@ -113,16 +145,12 @@ async function entrarInstrutor(evento) {
   } catch (erro) { status.textContent = erro?.message || "Não foi possível verificar o acesso neste aparelho."; }
 }
 function alternarAbaAcesso(aba) {
-  const cadastro = aba === "cadastro";
+  const cadastro = aba === "cadastro" && instrutores.length === 0;
   document.querySelector("#login-form").hidden = cadastro;
   document.querySelector("#register-form").hidden = !cadastro;
-  document.querySelectorAll(".auth-tab").forEach(botao => botao.classList.toggle("active", botao.dataset.auth === aba));
-  document.querySelector("#register-role-hint").textContent = instrutores.length === 0 ? "A primeira conta cadastrada será a instrutora principal." : "A segunda conta será instrutora e poderá consultar as missões.";
-  document.querySelector("#register-name").disabled = instrutores.length >= 2;
-  document.querySelector("#register-password").disabled = instrutores.length >= 2;
-  document.querySelector("#register-confirm").disabled = instrutores.length >= 2;
-  document.querySelector("#register-form").querySelector("button[type=submit]").disabled = instrutores.length >= 2;
-  document.querySelector('.auth-tab[data-auth="cadastro"]').hidden = instrutores.length >= 2;
+  document.querySelectorAll(".auth-tab").forEach(botao => botao.classList.toggle("active", botao.dataset.auth === (cadastro ? "cadastro" : "login")));
+  document.querySelector("#register-role-hint").textContent = "A primeira conta cadastrada será a principal. Depois, ela poderá incluir outros instrutores na aba Equipe.";
+  document.querySelector('.auth-tab[data-auth="cadastro"]').hidden = instrutores.length > 0;
 }
 function lerCriancas() {
   try {
@@ -329,6 +357,7 @@ function salvarMissao(categoriaId, missaoId) {
   } catch { document.querySelector("#missions-feedback").textContent = "Não foi possível salvar esta missão neste aparelho."; }
 }
 function mostrarArea(id) {
+  if (id === "view-team" && !ehInstrutorPrincipal()) { mostrarToast("A aba Equipe é exclusiva da Conta principal."); return; }
   document.querySelectorAll(".app-view").forEach(area => { area.hidden = area.id !== id; area.classList.toggle("active", area.id === id); });
   document.querySelectorAll(".section-tab").forEach(botao => botao.classList.toggle("active", botao.dataset.view === id));
   if (id === "view-home") { renderizarHome(); renderizarMomentos(); }
@@ -630,6 +659,7 @@ document.querySelector("#cancel-edit").addEventListener("click", cancelarEdicaoR
 document.querySelector("#delete-edit-record").addEventListener("click", excluirRegistroEditando);
 document.querySelectorAll(".auth-tab").forEach(botao => botao.addEventListener("click", () => alternarAbaAcesso(botao.dataset.auth)));
 document.querySelector("#register-form").addEventListener("submit", cadastrarInstrutor);
+document.querySelector("#team-form").addEventListener("submit", adicionarInstrutorEquipe);
 document.querySelector("#login-form").addEventListener("submit", entrarInstrutor);
 document.querySelector("#logout-button").addEventListener("click", () => {
   localStorage.removeItem(CHAVE_LOGIN_AUTOMATICO);

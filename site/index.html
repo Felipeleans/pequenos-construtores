@@ -44,8 +44,8 @@
       <span class="login-mark" aria-hidden="true">✦</span>
       <p class="eyebrow">ÁREA DOS INSTRUTORES</p>
       <h1 id="login-title">Pequenos Construtores</h1>
-      <p class="login-copy">Acesse o painel ou cadastre até dois instrutores.</p>
-      <div class="auth-tabs" role="tablist" aria-label="Acesso ao painel"><button class="auth-tab active" type="button" data-auth="login">Entrar</button><button class="auth-tab" type="button" data-auth="cadastro">Cadastrar instrutor</button></div>
+      <p class="login-copy">Entre com seu nome e PIN. A conta principal pode incluir outros instrutores na aba Equipe.</p>
+      <div class="auth-tabs" role="tablist" aria-label="Acesso ao painel"><button class="auth-tab active" type="button" data-auth="login">Entrar</button><button class="auth-tab" type="button" data-auth="cadastro">Criar conta principal</button></div>
       <form id="login-form" class="auth-form">
         <label for="login-name">Nome do instrutor</label><select id="login-name" required><option value="">Selecione seu nome</option></select>
         <label for="login-password">PIN de 4 dígitos</label><input id="login-password" type="password" inputmode="numeric" pattern="[0-9]{4}" minlength="4" maxlength="4" autocomplete="current-password" required>
@@ -54,11 +54,11 @@
         <button class="primary-button" type="submit">Entrar no painel</button><p class="auth-feedback" id="login-status" role="status" aria-live="polite"></p>
       </form>
       <form id="register-form" class="auth-form" hidden>
-        <p class="login-note" id="register-role-hint">A primeira conta cadastrada será a instrutora principal.</p>
+        <p class="login-note" id="register-role-hint">A primeira conta cadastrada será a instrutora principal e poderá incluir outros instrutores depois.</p>
         <label for="register-name">Nome do instrutor</label><input id="register-name" type="text" autocomplete="name" maxlength="70" required>
         <label for="register-password">Crie um PIN de 4 dígitos</label><input id="register-password" type="password" inputmode="numeric" pattern="[0-9]{4}" minlength="4" maxlength="4" autocomplete="new-password" required>
         <label for="register-confirm">Confirme o PIN</label><input id="register-confirm" type="password" inputmode="numeric" pattern="[0-9]{4}" minlength="4" maxlength="4" autocomplete="new-password" required>
-        <button class="primary-button" type="submit">Cadastrar instrutor</button><p class="auth-feedback" id="register-status" role="status" aria-live="polite"></p>
+        <button class="primary-button" type="submit">Cadastrar conta principal</button><p class="auth-feedback" id="register-status" role="status" aria-live="polite"></p>
       </form>
       <p class="login-note">Contas e senhas ficam neste aparelho. Este protótipo não sincroniza acessos com outros dispositivos.</p>
       <button class="back-home-button" type="button" id="back-home-button">Voltar à página inicial</button>
@@ -84,6 +84,7 @@
       <button type="button" class="section-tab" data-view="view-podium">Pódio</button>
       <button type="button" class="section-tab" data-view="view-children">Cadastro crianças</button>
       <button type="button" class="section-tab" data-view="view-missions">Missões</button>
+      <button type="button" class="section-tab" id="team-tab" data-view="view-team" hidden>Equipe</button>
       <button type="button" class="section-tab" data-view="view-updates">Atualizações</button>
     </nav>
     <section id="view-home" class="app-view active">
@@ -177,9 +178,25 @@
           <article class="update-card"><span class="update-mark">01</span><div><h3>Pódio e pontos extras</h3><p>O pódio soma um ponto por missão concluída e os pontos extras concedidos pelos instrutores.</p></div></article>
           <article class="update-card"><span class="update-mark">02</span><div><h3>Busca de pontuação</h3><p>Pesquise por criança ou igreja para consultar pontos de missões, pontos extras e o total, junto com os motivos dos extras.</p></div></article>
           <article class="update-card"><span class="update-mark">03</span><div><h3>Registro e progresso individuais</h3><p>Consulte o avanço de cada criança nas quatro categorias e edite ou exclua registros quando necessário.</p></div></article>
+          <article class="update-card"><span class="update-mark">04</span><div><h3>Equipe de instrutores</h3><p>A Conta principal pode adicionar mais instrutores, cada um com nome e PIN próprios, para usar o painel neste aparelho.</p></div></article>
         </div>
       </section>
       <section class="updates-future"><span class="updates-future-icon" aria-hidden="true">↻</span><div><h2>Próximas atualizações</h2><p>Novas melhorias e mudanças do aplicativo serão apresentadas nesta área.</p></div></section>
+    </section>
+    <section id="view-team" class="app-view" hidden>
+      <div class="welcome-row"><div><p class="eyebrow">ACESSOS DO PAINEL</p><h1>Equipe de instrutores</h1><p class="intro">Inclua mais pessoas para registrar e acompanhar as missões neste aparelho.</p></div><span class="step-pill" id="team-count">0 instrutores</span></div>
+      <div class="team-layout">
+        <section class="panel team-add-panel"><div class="panel-heading"><div><p class="eyebrow">NOVO ACESSO</p><h2>Adicionar instrutor</h2></div><span class="passport-icon" aria-hidden="true">＋</span></div>
+          <p class="side-copy">Cada pessoa terá seu nome e PIN de 4 dígitos. Instrutores podem usar o painel; somente a Conta principal pode editar missões e gerenciar a equipe.</p>
+          <form id="team-form" class="team-form">
+            <label for="team-name">Nome do instrutor</label><input id="team-name" type="text" autocomplete="name" maxlength="70" required>
+            <label for="team-pin">PIN de 4 dígitos</label><input id="team-pin" type="password" inputmode="numeric" pattern="[0-9]{4}" minlength="4" maxlength="4" autocomplete="new-password" required>
+            <label for="team-pin-confirm">Confirme o PIN</label><input id="team-pin-confirm" type="password" inputmode="numeric" pattern="[0-9]{4}" minlength="4" maxlength="4" autocomplete="new-password" required>
+            <button class="primary-button" type="submit">Adicionar à equipe</button><p class="form-feedback" id="team-feedback" role="status" aria-live="polite"></p>
+          </form>
+        </section>
+        <section class="panel team-list-panel"><div class="panel-heading"><div><p class="eyebrow">ACESSOS CADASTRADOS</p><h2>Quem pode entrar</h2></div></div><div id="team-list" class="team-list"></div></section>
+      </div>
     </section>
     <footer><span>Pequenos Construtores</span><span>Dados guardados neste aparelho enquanto estiver offline.</span></footer>
   </main>
