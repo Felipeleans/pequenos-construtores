@@ -1,0 +1,18 @@
+[functions.setup-team]
+verify_jwt = false
+
+[functions.list-members]
+verify_jwt = false
+
+[functions.login-pin]
+verify_jwt = false
+
+[functions.add-instructor]
+verify_jwt = false
+
+[functions.request-pin-reset]
+verify_jwt = false
+
+[functions.reset-pin]
+verify_jwt = false
+
