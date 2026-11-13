@@ -47,11 +47,21 @@ function salvarPontosExtras() { localStorage.setItem(CHAVE_PONTOS_EXTRAS, JSON.s
 function salvarInstrutores() { localStorage.setItem(CHAVE_INSTRUTORES, JSON.stringify(instrutores)); }
 function agendarSincronizacao() { NUVEM?.scheduleSync(); }
 function ehInstrutorPrincipal() { return usuarioAtual?.papel === "principal"; }
+function nomeDaConta(conta) {
+  const valor = typeof conta === "string" ? conta : conta?.name ?? conta?.nome ?? conta?.display_name ?? conta?.full_name ?? conta?.user_metadata?.name ?? conta?.member?.name ?? "";
+  const nome = String(valor).trim();
+  return /^(undefined|null)$/i.test(nome) ? "" : nome;
+}
+function normalizarMembrosRemotos(resultado) {
+  const lista = Array.isArray(resultado) ? resultado : resultado?.members ?? resultado?.data?.members ?? resultado?.data ?? [];
+  if (!Array.isArray(lista)) return [];
+  return lista.map(conta => ({ ...conta, name: nomeDaConta(conta) })).filter(conta => conta.name);
+}
 function renderizarListaInstrutores() {
   const seletor = document.querySelector("#login-name");
   const selecionado = seletor.value;
   const contas = membrosRemotos.length ? membrosRemotos : instrutores;
-  const nomes = contas.map(conta => String(conta?.name ?? conta?.nome ?? "").trim()).filter(Boolean);
+  const nomes = [...new Set(contas.map(nomeDaConta).filter(Boolean))];
   seletor.innerHTML = `<option value="">Selecione seu nome</option>${nomes.map(nome => `<option value="${escapar(nome)}">${escapar(nome)}</option>`).join("")}`;
   seletor.disabled = nomes.length === 0;
   const nomeSelecionado = nomes.find(nome => nome.toLocaleLowerCase("pt-BR") === selecionado.trim().toLocaleLowerCase("pt-BR"));
@@ -147,7 +157,7 @@ async function carregarEquipeRemota(codigo) {
   status.textContent = "Buscando os nomes da equipe…";
   try {
     const resultado = await NUVEM.listarMembros(valor);
-    membrosRemotos = resultado.members || [];
+    membrosRemotos = normalizarMembrosRemotos(resultado);
     renderizarListaInstrutores();
     status.textContent = membrosRemotos.length ? "Nomes carregados. Selecione o instrutor e digite o PIN." : "Nenhum instrutor foi encontrado para este código.";
   } catch (erro) {
