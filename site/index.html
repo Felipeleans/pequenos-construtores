@@ -35,7 +35,7 @@
       <p class="eyebrow">QUATRO CAMINHOS DE APRENDIZADO</p><h2 id="home-categories-title">Uma jornada para cada talento</h2>
       <div class="home-category-grid" id="public-home-categories"></div>
     </section>
-    <section class="home-how"><div><p class="eyebrow">SIMPLES PARA ACOMPANHAR</p><h2>Um registro de cada conquista</h2></div><p>Cadastre as crianças, escolha a missão concluída e valide o registro. O progresso fica guardado neste aparelho e pode sincronizar quando houver conexão.</p></section>
+    <section class="home-how"><div><p class="eyebrow">SIMPLES PARA ACOMPANHAR</p><h2>Um registro de cada conquista</h2></div><p>Cadastre as crianças, escolha a missão concluída e valide o registro. Com internet, a equipe vê os mesmos dados; sem conexão, o aparelho guarda as alterações para sincronizar depois.</p></section>
     <footer class="public-home-footer"><span>Pequenos Construtores</span><span>Uma jornada de fé, aprendizado e serviço.</span></footer>
   </main>
 
@@ -47,11 +47,19 @@
       <p class="login-copy">Entre com seu nome e PIN. A conta principal pode incluir outros instrutores na aba Equipe.</p>
       <div class="auth-tabs" role="tablist" aria-label="Acesso ao painel"><button class="auth-tab active" type="button" data-auth="login">Entrar</button><button class="auth-tab" type="button" data-auth="cadastro">Criar conta principal</button></div>
       <form id="login-form" class="auth-form">
+        <label for="login-team-code">Código da equipe</label><input id="login-team-code" type="text" autocapitalize="characters" autocomplete="off" maxlength="48" placeholder="Para entrar em outro aparelho">
         <label for="login-name">Nome do instrutor</label><select id="login-name" required><option value="">Selecione seu nome</option></select>
         <label for="login-password">PIN de 4 dígitos</label><input id="login-password" type="password" inputmode="numeric" pattern="[0-9]{4}" minlength="4" maxlength="4" autocomplete="current-password" required>
         <label class="remember-login"><input id="remember-login" type="checkbox"><span>Entrar automaticamente neste aparelho</span></label>
         <p class="remember-note">Qualquer pessoa com acesso a este aparelho poderá abrir a conta lembrada.</p>
-        <button class="primary-button" type="submit">Entrar no painel</button><p class="auth-feedback" id="login-status" role="status" aria-live="polite"></p>
+        <button class="primary-button" type="submit">Entrar no painel</button><button class="text-button forgot-pin-button" id="forgot-pin-button" type="button">Esqueci meu PIN</button><p class="auth-feedback" id="login-status" role="status" aria-live="polite"></p>
+      </form>
+      <form id="reset-pin-form" class="auth-form" hidden>
+        <p class="login-note">Escolha o instrutor e cadastre um novo PIN. Esta redefinição foi autorizada pelo e-mail da Conta 1.</p>
+        <label for="reset-member">Instrutor</label><select id="reset-member" required><option value="">Selecione um instrutor</option></select>
+        <label for="reset-pin">Novo PIN de 4 dígitos</label><input id="reset-pin" type="password" inputmode="numeric" pattern="[0-9]{4}" minlength="4" maxlength="4" autocomplete="new-password" required>
+        <label for="reset-pin-confirm">Confirme o novo PIN</label><input id="reset-pin-confirm" type="password" inputmode="numeric" pattern="[0-9]{4}" minlength="4" maxlength="4" autocomplete="new-password" required>
+        <button class="primary-button" type="submit">Redefinir PIN</button><button id="back-to-login-after-reset" class="text-button" type="button">Voltar à entrada</button><p class="auth-feedback" id="reset-pin-status" role="status" aria-live="polite"></p>
       </form>
       <form id="register-form" class="auth-form" hidden>
         <p class="login-note" id="register-role-hint">A primeira conta cadastrada será a instrutora principal e poderá incluir outros instrutores depois.</p>
@@ -60,7 +68,7 @@
         <label for="register-confirm">Confirme o PIN</label><input id="register-confirm" type="password" inputmode="numeric" pattern="[0-9]{4}" minlength="4" maxlength="4" autocomplete="new-password" required>
         <button class="primary-button" type="submit">Cadastrar conta principal</button><p class="auth-feedback" id="register-status" role="status" aria-live="polite"></p>
       </form>
-      <p class="login-note">Contas e senhas ficam neste aparelho. Este protótipo não sincroniza acessos com outros dispositivos.</p>
+      <p class="login-note">Entre com o código da equipe, seu nome e PIN. O primeiro acesso em cada aparelho precisa de internet; depois, o aplicativo guarda dados para uso offline.</p>
       <button class="back-home-button" type="button" id="back-home-button">Voltar à página inicial</button>
     </div>
   </section>
@@ -185,6 +193,20 @@
     </section>
     <section id="view-team" class="app-view" hidden>
       <div class="welcome-row"><div><p class="eyebrow">ACESSOS DO PAINEL</p><h1>Equipe de instrutores</h1><p class="intro">Inclua mais pessoas para registrar e acompanhar as missões neste aparelho.</p></div><span class="step-pill" id="team-count">0 instrutores</span></div>
+      <section class="panel team-cloud-panel" id="team-cloud-setup">
+        <div class="panel-heading"><div><p class="eyebrow">DADOS COMPARTILHADOS</p><h2>Ativar sincronização entre aparelhos</h2></div><span class="passport-icon" aria-hidden="true">↻</span></div>
+        <p class="side-copy">Cadastre a equipe uma vez. A Conta 1 recebe os links de recuperação de PIN e pode redefinir os PINs dos demais instrutores.</p>
+        <form id="cloud-setup-form" class="team-form cloud-setup-form">
+          <label for="cloud-team-name">Nome da equipe</label><input id="cloud-team-name" type="text" value="Pequenos Construtores" maxlength="100" required>
+          <label for="cloud-recovery-email">E-mail da Conta 1 para recuperação</label><input id="cloud-recovery-email" type="email" autocomplete="email" aria-describedby="cloud-recovery-help" required><small id="cloud-recovery-help">Use o mesmo e-mail da sua conta Supabase/GitHub. No plano gratuito, o envio padrão fica limitado a endereços autorizados pelo Supabase.</small>
+          <label for="cloud-setup-token">Código inicial de configuração</label><input id="cloud-setup-token" type="password" autocomplete="new-password" required>
+          <label for="cloud-setup-pin">Confirme o PIN da Conta 1</label><input id="cloud-setup-pin" type="password" inputmode="numeric" pattern="[0-9]{4}" minlength="4" maxlength="4" required>
+          <button class="primary-button" type="submit">Ativar e importar dados deste aparelho</button>
+          <p class="form-feedback" id="cloud-setup-feedback" role="status" aria-live="polite"></p>
+        </form>
+        <div id="cloud-team-code-panel" class="cloud-team-code-panel" hidden><strong>Código para os outros aparelhos</strong><p>Compartilhe este código somente com os instrutores da equipe.</p><code id="cloud-team-code"></code><button id="copy-team-code" class="secondary-button" type="button">Copiar código da equipe</button></div>
+        <p class="form-feedback" id="cloud-status-message" role="status" aria-live="polite"></p>
+      </section>
       <div class="team-layout">
         <section class="panel team-add-panel"><div class="panel-heading"><div><p class="eyebrow">NOVO ACESSO</p><h2>Adicionar instrutor</h2></div><span class="passport-icon" aria-hidden="true">＋</span></div>
           <p class="side-copy">Cada pessoa terá seu nome e PIN de 4 dígitos. Instrutores podem usar o painel; somente a Conta principal pode editar missões e gerenciar a equipe.</p>
@@ -198,9 +220,11 @@
         <section class="panel team-list-panel"><div class="panel-heading"><div><p class="eyebrow">ACESSOS CADASTRADOS</p><h2>Quem pode entrar</h2></div></div><div id="team-list" class="team-list"></div></section>
       </div>
     </section>
-    <footer><span>Pequenos Construtores</span><span>Dados guardados neste aparelho enquanto estiver offline.</span></footer>
+    <footer><span>Pequenos Construtores</span><span>Dados guardados offline e sincronizados com a equipe quando há internet.</span></footer>
   </main>
   <div id="toast" class="toast" role="status" aria-live="polite"></div>
+  <script src="cloud-config.js" defer></script>
+  <script src="cloud-sync.js" defer></script>
   <script src="app.js" defer></script>
 </body>
 </html>

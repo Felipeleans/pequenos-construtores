@@ -14,6 +14,7 @@ const CHAVE_INSTRUTORES = "pequenos-construtores-instrutores-v1";
 const CHAVE_LOGIN_AUTOMATICO = "pequenos-construtores-login-automatico-v1";
 const CHAVE_REINICIO_CONTAS = "pequenos-construtores-reinicio-contas-v1";
 const CHAVE_PONTOS_EXTRAS = "pequenos-construtores-pontos-extras-v1";
+const NUVEM = window.PequenosConstrutoresCloud;
 try {
   if (localStorage.getItem(CHAVE_REINICIO_CONTAS) !== "concluido") {
     localStorage.removeItem(CHAVE_INSTRUTORES);
@@ -26,6 +27,7 @@ let descricoes = lerDescricoes();
 let CRIANCAS = lerCriancas();
 let CATALOGO = lerCatalogo();
 let instrutores = lerInstrutores();
+let membrosRemotos = [];
 let usuarioAtual = null;
 let criancaSelecionada = "";
 let categoriaSelecionada = "";
@@ -39,21 +41,50 @@ function lerRegistros() { try { return JSON.parse(localStorage.getItem(CHAVE) ||
 function lerDescricoes() { try { return JSON.parse(localStorage.getItem(CHAVE_DESCRICOES) || "{}"); } catch { return {}; } }
 function lerPontosExtras() { try { const lista = JSON.parse(localStorage.getItem(CHAVE_PONTOS_EXTRAS) || "[]"); return Array.isArray(lista) ? lista.filter(item => item && typeof item.criancaId === "string" && Number.isSafeInteger(item.pontos) && item.pontos > 0) : []; } catch { return []; } }
 function lerInstrutores() { try { const lista = JSON.parse(localStorage.getItem(CHAVE_INSTRUTORES) || "[]"); return Array.isArray(lista) ? lista : []; } catch { return []; } }
-function salvarPontosExtras() { localStorage.setItem(CHAVE_PONTOS_EXTRAS, JSON.stringify(pontosExtras)); }
+function salvarPontosExtras() { localStorage.setItem(CHAVE_PONTOS_EXTRAS, JSON.stringify(pontosExtras)); agendarSincronizacao(); }
 function salvarInstrutores() { localStorage.setItem(CHAVE_INSTRUTORES, JSON.stringify(instrutores)); }
+function agendarSincronizacao() { NUVEM?.scheduleSync(); }
 function ehInstrutorPrincipal() { return usuarioAtual?.papel === "principal"; }
 function renderizarListaInstrutores() {
   const seletor = document.querySelector("#login-name");
   const selecionado = seletor.value;
-  seletor.innerHTML = `<option value="">Selecione seu nome</option>${instrutores.map(conta => `<option value="${escapar(conta.nome)}">${escapar(conta.nome)}</option>`).join("")}`;
-  seletor.disabled = instrutores.length === 0;
-  if (instrutores.some(conta => conta.nome === selecionado)) seletor.value = selecionado;
+  const contas = membrosRemotos.length ? membrosRemotos : instrutores;
+  seletor.innerHTML = `<option value="">Selecione seu nome</option>${contas.map(conta => `<option value="${escapar(conta.nome)}">${escapar(conta.nome)}</option>`).join("")}`;
+  seletor.disabled = contas.length === 0;
+  if (contas.some(conta => conta.nome === selecionado)) seletor.value = selecionado;
 }
 function renderizarEquipe() {
   const lista = document.querySelector("#team-list");
   if (!lista) return;
-  document.querySelector("#team-count").textContent = `${instrutores.length} ${instrutores.length === 1 ? "instrutor" : "instrutores"}`;
-  lista.innerHTML = instrutores.length ? instrutores.map(conta => `<article class="team-account"><div class="team-account-main"><span class="team-account-icon" aria-hidden="true">${conta.papel === "principal" ? "✦" : "♙"}</span><span class="team-account-info"><strong>${escapar(conta.nome)}</strong><small>${conta.papel === "principal" ? "Conta principal · gerencia missões e equipe" : "Instrutor · registros e acompanhamento"}</small></span></div><span class="team-role">${conta.papel === "principal" ? "Principal" : "Instrutor"}</span></article>`).join("") : `<div class="empty-state"><p>Nenhum instrutor cadastrado.</p></div>`;
+  const contas = membrosRemotos.length ? membrosRemotos : instrutores;
+  document.querySelector("#team-count").textContent = `${contas.length} ${contas.length === 1 ? "instrutor" : "instrutores"}`;
+  lista.innerHTML = contas.length ? contas.map(conta => `<article class="team-account"><div class="team-account-main"><span class="team-account-icon" aria-hidden="true">${conta.role === "principal" || conta.papel === "principal" ? "✦" : "♙"}</span><span class="team-account-info"><strong>${escapar(conta.name || conta.nome)}</strong><small>${conta.role === "principal" || conta.papel === "principal" ? "Conta principal · gerencia missões e equipe" : "Instrutor · registros e acompanhamento"}</small></span></div><span class="team-role">${conta.role === "principal" || conta.papel === "principal" ? "Principal" : "Instrutor"}</span></article>`).join("") : `<div class="empty-state"><p>Nenhum instrutor cadastrado.</p></div>`;
+}
+async function salvarCredencialLocal(id, nome, senha, papel) {
+  const credencial = await derivarSenha(senha);
+  const conta = { id, nome, papel, sal: credencial.sal, resumo: credencial.resumo };
+  instrutores = [...instrutores.filter(item => item.id !== id && item.nome.toLocaleLowerCase("pt-BR") !== nome.toLocaleLowerCase("pt-BR")), conta];
+  salvarInstrutores();
+  renderizarListaInstrutores();
+  return conta;
+}
+async function carregarEquipeRemota(codigo) {
+  if (!NUVEM?.configurado() || !codigo?.trim() || !navigator.onLine) return;
+  try {
+    const resultado = await NUVEM.listarMembros(codigo);
+    membrosRemotos = resultado.members || [];
+    renderizarListaInstrutores();
+  } catch (erro) {
+    membrosRemotos = [];
+    renderizarListaInstrutores();
+    document.querySelector("#login-status").textContent = erro?.message || "Não foi possível localizar a equipe.";
+  }
+}
+function aplicarDadosDaNuvem() {
+  registros = lerRegistros(); pontosExtras = lerPontosExtras(); CRIANCAS = lerCriancas(); CATALOGO = lerCatalogo();
+  renderizarListaInstrutores(); renderizarCriancas(document.querySelector("#child-search").value);
+  renderizarCategorias(); renderizarMissoes(); renderizarDescricaoMissao(); renderizarResumo(); renderizarRegistros();
+  renderizarProgresso(document.querySelector("#progress-search").value); renderizarPodio(); renderizarHome(); renderizarMomentos();
 }
 function codificarBase64(bytes) { return btoa(String.fromCharCode(...new Uint8Array(bytes))); }
 async function derivarSenha(senha, sal) {
@@ -72,9 +103,23 @@ function abrirSessao(instrutor) {
   document.querySelector(".topbar").hidden = false;
   document.querySelector("#inicio").hidden = false;
   document.querySelector("#team-tab").hidden = !ehInstrutorPrincipal();
+  const sessaoNuvem = NUVEM?.lerSessao();
+  const idNuvem = sessaoNuvem?.user?.app_metadata?.member_id || sessaoNuvem?.user?.user_metadata?.member_id;
+  const conectado = !!sessaoNuvem?.access_token && idNuvem === instrutor.id;
+  if (sessaoNuvem?.access_token && !conectado) NUVEM.limparSessao();
+  document.querySelector("#team-cloud-setup").hidden = conectado || !ehInstrutorPrincipal();
+  document.querySelector("#cloud-setup-token").value = "";
+  if (NUVEM?.lerCodigoEquipe()) {
+    document.querySelector("#cloud-team-code").textContent = NUVEM.lerCodigoEquipe();
+    document.querySelector("#cloud-team-code-panel").hidden = false;
+  }
   renderizarEquipe();
   if (!ehInstrutorPrincipal() && document.querySelector("#view-team").classList.contains("active")) mostrarArea("view-dashboard");
   renderizarDescricaoMissao(); renderizarEditorMissoes(); renderizarHome(); renderizarMomentos();
+  if (conectado && navigator.onLine) {
+    NUVEM.carregarMembrosAutenticados().then(lista => { membrosRemotos = lista || []; renderizarEquipe(); renderizarListaInstrutores(); }).catch(() => {});
+    NUVEM.sync().catch(() => {});
+  }
 }
 async function criarContaInstrutor(nome, senha, papel) {
   const credencial = await derivarSenha(senha);
@@ -116,22 +161,140 @@ async function adicionarInstrutorEquipe(evento) {
   const senha = document.querySelector("#team-pin").value;
   const confirmacao = document.querySelector("#team-pin-confirm").value;
   if (nome.length < 2) { status.textContent = "Informe o nome do instrutor."; return; }
-  if (instrutores.some(item => item.nome.toLocaleLowerCase("pt-BR") === nome.toLocaleLowerCase("pt-BR"))) { status.textContent = "Esse nome já está cadastrado. Escolha outro nome."; return; }
+  const listaDuplicidade = NUVEM?.lerSessao()?.access_token ? membrosRemotos.map(item => ({ nome: item.name })) : instrutores;
+  if (listaDuplicidade.some(item => item.nome.toLocaleLowerCase("pt-BR") === nome.toLocaleLowerCase("pt-BR"))) { status.textContent = "Esse nome já está cadastrado. Escolha outro nome."; return; }
   if (!/^\d{4}$/.test(senha)) { status.textContent = "O PIN deve ter exatamente 4 dígitos numéricos."; return; }
   if (senha !== confirmacao) { status.textContent = "Os PINs não coincidem."; return; }
   status.textContent = "Criando o acesso...";
   try {
-    await criarContaInstrutor(nome, senha, "instrutor");
+    if (NUVEM?.lerSessao()?.access_token) {
+      if (!navigator.onLine) { status.textContent = "Conecte este aparelho à internet para adicionar um instrutor à equipe compartilhada."; return; }
+      const resultado = await NUVEM.adicionarInstrutor(nome, senha);
+      await salvarCredencialLocal(resultado.member.id, nome, senha, "instrutor");
+      membrosRemotos = await NUVEM.carregarMembrosAutenticados();
+    } else await criarContaInstrutor(nome, senha, "instrutor");
+    renderizarEquipe();
     document.querySelector("#team-form").reset();
     status.textContent = `${nome} foi adicionado à equipe e já pode entrar com o próprio PIN.`;
   } catch (erro) { status.textContent = erro?.message || "Não foi possível adicionar o instrutor neste aparelho."; }
+}
+async function ativarCompartilhamento(evento) {
+  evento.preventDefault();
+  const status = document.querySelector("#cloud-setup-feedback");
+  if (!ehInstrutorPrincipal()) { status.textContent = "Somente a Conta 1 pode configurar a equipe."; return; }
+  if (!NUVEM?.configurado()) { status.textContent = "A conexão do banco ainda está sendo preparada."; return; }
+  if (!navigator.onLine) { status.textContent = "Conecte-se à internet para ativar a sincronização."; return; }
+  const setupToken = document.querySelector("#cloud-setup-token").value.trim();
+  const pin = document.querySelector("#cloud-setup-pin").value;
+  const email = document.querySelector("#cloud-recovery-email").value.trim();
+  const teamName = document.querySelector("#cloud-team-name").value.trim();
+  if (!setupToken) { status.textContent = "Informe o código inicial de configuração."; return; }
+  if (!/^\d{4}$/.test(pin)) { status.textContent = "Digite o PIN atual da Conta 1."; return; }
+  try {
+    const credencial = await derivarSenha(pin, usuarioAtual.sal);
+    if (credencial.resumo !== usuarioAtual.resumo) { status.textContent = "O PIN não corresponde à Conta 1 deste aparelho."; return; }
+  } catch (erro) { status.textContent = erro?.message || "Não foi possível confirmar o PIN."; return; }
+  status.textContent = "Protegendo a equipe e importando os dados deste aparelho...";
+  try {
+      const resultado = await NUVEM.configurarEquipe({ setup_token: setupToken, name: usuarioAtual.nome, pin, recovery_email: email, team_name: teamName }, document.querySelector("#remember-login").checked);
+    const idAnterior = usuarioAtual.id;
+    const conta = await salvarCredencialLocal(resultado.member.id, resultado.member.name, pin, "principal");
+    instrutores = instrutores.filter(item => item.id !== idAnterior && item.id !== conta.id);
+    instrutores.push(conta); salvarInstrutores();
+    usuarioAtual = conta;
+    if (localStorage.getItem(CHAVE_LOGIN_AUTOMATICO) === idAnterior) localStorage.setItem(CHAVE_LOGIN_AUTOMATICO, conta.id);
+    NUVEM.salvarCodigoEquipe(resultado.team_code);
+    document.querySelector("#cloud-team-code").textContent = resultado.team_code;
+    document.querySelector("#cloud-team-code-panel").hidden = false;
+    document.querySelector("#cloud-setup-token").value = "";
+    document.querySelector("#cloud-setup-pin").value = "";
+    document.querySelector("#cloud-setup-form").hidden = true;
+    document.querySelector("#cloud-status-message").textContent = "Equipe ativada. Os dados locais estão sendo enviados para o banco compartilhado.";
+    document.querySelector("#team-cloud-setup").hidden = false;
+    try {
+      await NUVEM.sync();
+      document.querySelector("#cloud-status-message").textContent = "Equipe conectada e dados importados. Instrutores adicionais precisam ser cadastrados novamente aqui, com um novo PIN; os PINs locais antigos não podem ser recuperados.";
+      membrosRemotos = await NUVEM.carregarMembrosAutenticados();
+      renderizarEquipe();
+    } catch (erro) {
+      document.querySelector("#cloud-status-message").textContent = `A equipe foi criada, mas os dados continuam pendentes neste aparelho: ${erro?.message || "tente sincronizar novamente com internet"}`;
+    }
+    document.querySelector("#current-account-label").textContent = `${conta.nome} · Instrutor principal`;
+    atualizarEstadoRede();
+  } catch (erro) {
+    status.textContent = erro?.message || "Não foi possível ativar a equipe compartilhada.";
+  }
+}
+async function pedirRedefinicaoPin() {
+  const status = document.querySelector("#login-status");
+  const code = document.querySelector("#login-team-code").value.trim();
+  if (!code) { status.textContent = "Informe o código da equipe para enviar a recuperação ao e-mail da Conta 1."; return; }
+  if (!NUVEM?.configurado()) { status.textContent = "A recuperação por e-mail ainda está sendo preparada."; return; }
+  if (!navigator.onLine) { status.textContent = "Conecte-se à internet para solicitar a recuperação."; return; }
+  status.textContent = "Solicitando recuperação...";
+  try {
+    const result = await NUVEM.solicitarRedefinicao(code);
+    status.textContent = result.message || "Se a equipe estiver configurada, o link foi enviado ao e-mail da Conta 1.";
+  } catch (erro) { status.textContent = erro?.message || "Não foi possível solicitar a recuperação agora."; }
+}
+async function abrirTelaRedefinirPin() {
+  const parametros = new URLSearchParams(location.hash.replace(/^#/, ""));
+  const token = parametros.get("access_token");
+  if (!token || parametros.get("type") !== "recovery") return;
+  const login = document.querySelector("#login-screen");
+  document.querySelector("#public-home").hidden = true;
+  document.querySelector("#inicio").hidden = true;
+  document.querySelector(".topbar").hidden = true;
+  login.hidden = false;
+  document.querySelector("#login-form").hidden = true;
+  document.querySelector("#register-form").hidden = true;
+  document.querySelector("#reset-pin-form").hidden = false;
+  document.querySelector(".auth-tabs").hidden = true;
+  try {
+    const membros = await NUVEM.carregarMembrosAutenticados(token);
+    document.querySelector("#reset-member").innerHTML = `<option value="">Selecione um instrutor</option>${membros.map(item => `<option value="${escapar(item.id)}">${escapar(item.name)}${item.role === "principal" ? " · Conta principal" : ""}</option>`).join("")}`;
+    document.querySelector("#reset-pin-form").dataset.token = token;
+  } catch (erro) { document.querySelector("#reset-pin-status").textContent = erro?.message || "Este link expirou ou não pode ser usado."; }
+}
+async function redefinirPinPorEmail(evento) {
+  evento.preventDefault();
+  const form = document.querySelector("#reset-pin-form");
+  const status = document.querySelector("#reset-pin-status");
+  const pin = document.querySelector("#reset-pin").value;
+  const confirmacao = document.querySelector("#reset-pin-confirm").value;
+  const memberId = document.querySelector("#reset-member").value;
+  if (!memberId) { status.textContent = "Selecione o instrutor."; return; }
+  if (!/^\d{4}$/.test(pin)) { status.textContent = "O PIN precisa ter quatro números."; return; }
+  if (pin !== confirmacao) { status.textContent = "Os PINs não coincidem."; return; }
+  status.textContent = "Redefinindo o PIN...";
+  try {
+    const resultado = await NUVEM.redefinirPin(form.dataset.token, memberId, pin);
+    status.textContent = resultado.message || "PIN redefinido. Volte à tela de entrada.";
+    document.querySelector("#reset-pin").value = "";
+    document.querySelector("#reset-pin-confirm").value = "";
+  } catch (erro) { status.textContent = erro?.message || "Não foi possível redefinir o PIN."; }
 }
 async function entrarInstrutor(evento) {
   evento.preventDefault();
   const status = document.querySelector("#login-status");
   const nome = document.querySelector("#login-name").value.trim().toLocaleLowerCase("pt-BR");
   const senha = document.querySelector("#login-password").value;
+  const codigoEquipe = document.querySelector("#login-team-code").value.trim().toUpperCase();
   if (!/^\d{4}$/.test(senha)) { status.textContent = "Digite seu PIN de 4 dígitos."; return; }
+  if (codigoEquipe && NUVEM?.configurado() && navigator.onLine) {
+    status.textContent = "Verificando o acesso da equipe...";
+    try {
+      const resultado = await NUVEM.login(codigoEquipe, nome, senha, document.querySelector("#remember-login").checked);
+      const conta = await salvarCredencialLocal(resultado.member.id, resultado.member.name, senha, resultado.member.role);
+      document.querySelector("#login-password").value = "";
+      if (document.querySelector("#remember-login").checked) localStorage.setItem(CHAVE_LOGIN_AUTOMATICO, conta.id);
+      else localStorage.removeItem(CHAVE_LOGIN_AUTOMATICO);
+      membrosRemotos = await NUVEM.carregarMembrosAutenticados().catch(() => resultado.members || []);
+      abrirSessao(conta);
+      NUVEM.sync().catch(erro => { document.querySelector("#sync-status").lastElementChild.textContent = "Aguardando sincronização"; });
+      return;
+    } catch (erro) { status.textContent = erro?.message || "Não foi possível entrar na equipe."; return; }
+  }
   const conta = instrutores.find(item => item.nome.toLocaleLowerCase("pt-BR") === nome);
   if (!conta) { status.textContent = "Conta não encontrada. Confira o nome ou peça à Conta principal para cadastrar o acesso."; return; }
   status.textContent = "Verificando acesso...";
@@ -183,8 +346,8 @@ function lerCatalogo() {
     return item ? { ...padrao, nome: typeof item.nome === "string" && item.nome ? item.nome : padrao.nome, descricao: typeof item.descricao === "string" ? item.descricao : padrao.descricao } : padrao;
   })]));
 }
-function salvarRegistros() { localStorage.setItem(CHAVE, JSON.stringify(registros)); }
-function salvarCatalogo() { localStorage.setItem(CHAVE_CATALOGO, JSON.stringify(CATALOGO)); }
+function salvarRegistros() { localStorage.setItem(CHAVE, JSON.stringify(registros)); agendarSincronizacao(); }
+function salvarCatalogo() { localStorage.setItem(CHAVE_CATALOGO, JSON.stringify(CATALOGO)); agendarSincronizacao(); }
 function escapar(texto) { return String(texto).replace(/[&<>"']/g, c => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" })[c]); }
 function iconeBordado(categoria, pequeno = false) {
   const desenhos = {
@@ -320,6 +483,7 @@ function salvarCadastroCriancas() {
   try {
     const persistidas = CRIANCAS.map(({ nova, ...crianca }) => crianca);
     localStorage.setItem(CHAVE_CRIANCAS, JSON.stringify(persistidas));
+    agendarSincronizacao();
     CRIANCAS = persistidas;
     const idRecemCadastrada = criancaNovaId;
     criancaNovaId = "";
@@ -609,7 +773,12 @@ function excluirRegistroEditando() {
   renderizarResumo(); renderizarRegistros(); renderizarProgresso(document.querySelector("#progress-search").value); renderizarHome(); renderizarPodio();
   cancelarEdicaoRegistro("Registro excluído. A missão voltou para a lista disponível.");
 }
-function atualizarEstadoRede() { const online = navigator.onLine; document.querySelector("#sync-status").innerHTML = `<i style="background:${online ? "#74ad79" : "#d49a46"}"></i><span>${online ? "Salvo neste aparelho" : "Offline · salvo neste aparelho"}</span>`; }
+function atualizarEstadoRede() {
+  const online = navigator.onLine;
+  const sessao = NUVEM?.lerSessao();
+  const label = !online ? "Offline · alterações guardadas neste aparelho" : sessao?.access_token ? "Conectado à equipe" : "Salvo neste aparelho";
+  document.querySelector("#sync-status").innerHTML = `<i style="background:${online && sessao?.access_token ? "#74ad79" : "#d49a46"}"></i><span>${label}</span>`;
+}
 function aplicarTema(tema) {
   const escuro = tema === "escuro";
   document.documentElement.dataset.theme = escuro ? "escuro" : "claro";
@@ -661,8 +830,29 @@ document.querySelectorAll(".auth-tab").forEach(botao => botao.addEventListener("
 document.querySelector("#register-form").addEventListener("submit", cadastrarInstrutor);
 document.querySelector("#team-form").addEventListener("submit", adicionarInstrutorEquipe);
 document.querySelector("#login-form").addEventListener("submit", entrarInstrutor);
+document.querySelector("#cloud-setup-form").addEventListener("submit", ativarCompartilhamento);
+document.querySelector("#forgot-pin-button").addEventListener("click", pedirRedefinicaoPin);
+document.querySelector("#reset-pin-form").addEventListener("submit", redefinirPinPorEmail);
+document.querySelector("#back-to-login-after-reset").addEventListener("click", () => {
+  history.replaceState(null, "", location.pathname + location.search);
+  document.querySelector("#reset-pin-form").hidden = true;
+  document.querySelector("#login-form").hidden = false;
+  document.querySelector(".auth-tabs").hidden = false;
+  document.querySelector("#reset-pin-status").textContent = "";
+});
+document.querySelector("#login-team-code").addEventListener("change", evento => carregarEquipeRemota(evento.target.value));
+document.querySelector("#login-team-code").addEventListener("blur", evento => carregarEquipeRemota(evento.target.value));
+document.querySelector("#copy-team-code").addEventListener("click", async () => {
+  try { await navigator.clipboard.writeText(NUVEM.lerCodigoEquipe()); document.querySelector("#cloud-status-message").textContent = "Código da equipe copiado."; }
+  catch { document.querySelector("#cloud-status-message").textContent = "Selecione e copie o código da equipe manualmente."; }
+});
+window.addEventListener("pc-cloud-updated", aplicarDadosDaNuvem);
+window.addEventListener("pc-cloud-synced", () => {
+  document.querySelector("#sync-status").innerHTML = `<i style="background:#74ad79"></i><span>Sincronizado com a equipe</span>`;
+});
 document.querySelector("#logout-button").addEventListener("click", () => {
   localStorage.removeItem(CHAVE_LOGIN_AUTOMATICO);
+  NUVEM?.limparSessao();
   document.querySelector("#remember-login").checked = false;
   usuarioAtual = null;
   document.querySelector("#inicio").hidden = true;
@@ -674,6 +864,10 @@ document.querySelector("#logout-button").addEventListener("click", () => {
 const abrirLogin = () => {
   document.querySelector("#public-home").hidden = true;
   document.querySelector("#login-screen").hidden = false;
+  document.querySelector("#reset-pin-form").hidden = true;
+  document.querySelector("#login-form").hidden = false;
+  document.querySelector(".auth-tabs").hidden = false;
+  document.querySelector("#login-team-code").value = NUVEM?.lerCodigoEquipe() || "";
   document.querySelector("#login-name").focus();
 };
 document.querySelector("#home-login-button").addEventListener("click", abrirLogin);
@@ -705,7 +899,16 @@ document.querySelector("#record-form").addEventListener("submit", e => {
   criancaSelecionada = ""; categoriaSelecionada = ""; document.querySelector("#child-search").value = ""; document.querySelector("#mission-select").value = ""; renderizarCriancas(); renderizarCategorias(); renderizarMissoes(); renderizarDescricaoMissao();
 });
 document.querySelector("#show-records").addEventListener("click", () => document.querySelector(".recent-panel").scrollIntoView({ behavior: "smooth", block: "center" }));
-window.addEventListener("online", atualizarEstadoRede); window.addEventListener("offline", atualizarEstadoRede);
+window.addEventListener("online", () => { atualizarEstadoRede(); NUVEM?.sync().catch(() => {}); }); window.addEventListener("offline", atualizarEstadoRede);
 if ("serviceWorker" in navigator && location.protocol.startsWith("http")) window.addEventListener("load", () => navigator.serviceWorker.register("./sw.js").catch(() => {}));
 const contaLembrada = instrutores.find(conta => conta.id === localStorage.getItem(CHAVE_LOGIN_AUTOMATICO));
-if (contaLembrada) abrirSessao(contaLembrada);
+const hashArgs = new URLSearchParams(location.hash.replace(/^#/, ""));
+if (hashArgs.get("type") === "recovery") abrirTelaRedefinirPin();
+else if (contaLembrada) abrirSessao(contaLembrada);
+else if (NUVEM?.lerCodigoEquipe() && navigator.onLine) {
+  document.querySelector("#login-team-code").value = NUVEM.lerCodigoEquipe();
+  carregarEquipeRemota(NUVEM.lerCodigoEquipe());
+}
+setInterval(() => {
+  if (usuarioAtual && navigator.onLine && NUVEM?.lerSessao()?.access_token) NUVEM.sync().catch(() => {});
+}, 30000);
