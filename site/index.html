@@ -131,7 +131,7 @@
             <div id="child-list" class="child-list" role="listbox" aria-label="Crianças"></div>
           </div>
           <div class="field-block"><span class="field-label">2. Escolha a categoria</span><div id="category-list" class="category-list"></div></div>
-          <div class="field-block"><label for="mission-select">3. Missões disponíveis</label><select id="mission-select" class="mission-select" disabled></select><p id="mission-list-status" class="mission-list-status" role="status" aria-live="polite"></p></div>
+          <div class="field-block mission-field"><span class="field-label" id="mission-field-label">3. Missões disponíveis</span><div id="mission-buttons" class="mission-buttons" role="group" aria-labelledby="mission-field-label"></div><select id="mission-select" class="mission-select" disabled hidden aria-hidden="true" tabindex="-1"></select><p id="mission-list-status" class="mission-list-status" role="status" aria-live="polite"></p></div>
           <section class="mission-description" id="mission-description-area" aria-live="polite" aria-label="Descrição da missão"></section>
           <div class="validation-box"><span class="validation-icon" aria-hidden="true">✓</span><div><strong>Confira com a criança</strong><p>Valide a conclusão antes de salvar no passaporte individual.</p></div></div>
           <button id="save-button" class="primary-button" type="submit" disabled><span aria-hidden="true">✓</span> Validar e salvar registro</button>

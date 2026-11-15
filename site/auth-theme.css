@@ -314,3 +314,40 @@ html[data-theme="escuro"] .child-row-actions .delete-child-button{border-color:#
 html[data-theme="escuro"] .roster-actions .secondary-button,html[data-theme="escuro"] .roster-actions .add-child-button{background:#292929;border-color:#596c58;color:#c6dec3}
 html[data-theme="escuro"] .roster-actions .secondary-button:hover,html[data-theme="escuro"] .roster-actions .add-child-button:hover{background:#343a33}
 @media(max-width:760px){.roster-panel>.panel-heading{align-items:flex-start;flex-wrap:wrap;gap:12px}.roster-actions{width:100%;flex-wrap:nowrap}.roster-actions>button{flex:1 1 0;min-width:0;padding:0 7px;font-size:9px}}
+
+/* Acabamento visual: tipografia legível e emblemas vetoriais com bordado aparente. */
+html{scroll-behavior:smooth}
+body{line-height:1.5;text-rendering:optimizeLegibility;-webkit-font-smoothing:antialiased}
+body,body button,body input,body select,body textarea,svg text{font-family:system-ui,-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,Arial,sans-serif!important}
+h1,h2,h3{line-height:1.2;text-wrap:balance}
+button:focus-visible,a:focus-visible,input:focus-visible,select:focus-visible,textarea:focus-visible{outline:3px solid #d2ad58!important;outline-offset:3px}
+.panel,.stat-card{border-radius:16px}
+.badge-art{shape-rendering:geometricPrecision;filter:drop-shadow(0 2px 2px rgba(29,43,30,.2))}
+.badge-art-small{filter:drop-shadow(0 1px 1px rgba(29,43,30,.2))}
+.mission-field>.field-label{display:block;margin-bottom:9px}
+.mission-buttons{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:10px}
+.mission-patch{position:relative;isolation:isolate;display:grid;grid-template-columns:42px minmax(0,1fr) 22px;align-items:center;gap:10px;min-width:0;min-height:70px;padding:10px 14px;border:2px solid #819071;border-radius:14px;background:linear-gradient(145deg,#f8f7ed,#e9eddf);box-shadow:inset 0 0 0 3px rgba(255,255,255,.42),0 3px 9px rgba(39,57,39,.09);color:#344b38;text-align:left;cursor:pointer;transition:transform .16s ease,box-shadow .16s ease,border-color .16s ease}
+.mission-patch::before{content:"";position:absolute;z-index:-1;inset:5px;border:1px dashed #9a8759;border-radius:9px;pointer-events:none;opacity:.9}
+.mission-patch:hover{transform:translateY(-2px);border-color:#62805c;box-shadow:inset 0 0 0 3px rgba(255,255,255,.56),0 6px 14px rgba(39,57,39,.14)}
+.mission-patch.selected{border-color:#b38a3c;background:linear-gradient(145deg,#fbf4df,#eee3c1);box-shadow:inset 0 0 0 3px rgba(255,255,255,.5),0 0 0 2px rgba(191,154,77,.2),0 5px 12px rgba(39,57,39,.12)}
+.mission-patch.selected::before{border-color:#a8843e;border-style:dashed}
+.mission-patch-emblem{display:grid;place-items:center;width:38px;height:38px;border:1px dashed #8b805f;border-radius:50%;background:#e1e8d8;box-shadow:inset 0 0 0 3px rgba(255,255,255,.56)}
+.mission-patch-emblem .badge-art-small{width:32px;height:32px}
+.mission-patch-copy{display:grid;gap:3px;min-width:0;padding:2px 0}
+.mission-patch-copy small{color:#78866f;font-size:9px;font-weight:800;letter-spacing:1px;line-height:1.2}
+.mission-patch-copy strong{overflow-wrap:anywhere;color:#344b38;font-size:12px;font-weight:750;line-height:1.35}
+.mission-patch-check{display:grid;place-items:center;width:21px;height:21px;border:1px solid #a6b39c;border-radius:50%;color:transparent;font-size:12px;font-weight:900;line-height:1}
+.mission-patch.selected .mission-patch-check{border-color:#9a7837;background:#9a7837;color:#fff}
+.mission-select[hidden]{display:none!important}
+.mission-list-status{margin-top:8px;font-size:10px}
+html[data-theme="escuro"] .mission-patch{border-color:#63715d;background:linear-gradient(145deg,#30372f,#252b25);box-shadow:inset 0 0 0 3px rgba(255,255,255,.035),0 3px 10px rgba(0,0,0,.22);color:#e3e8df}
+html[data-theme="escuro"] .mission-patch::before{border-color:#9b895d}
+html[data-theme="escuro"] .mission-patch:hover{border-color:#91a987;box-shadow:inset 0 0 0 3px rgba(255,255,255,.06),0 6px 15px rgba(0,0,0,.3)}
+html[data-theme="escuro"] .mission-patch.selected{border-color:#c2a257;background:linear-gradient(145deg,#443b28,#35301f);box-shadow:inset 0 0 0 3px rgba(255,255,255,.04),0 0 0 2px rgba(194,162,87,.22)}
+html[data-theme="escuro"] .mission-patch.selected::before{border-color:#d0b56d}
+html[data-theme="escuro"] .mission-patch-emblem{background:#344032;border-color:#899578;box-shadow:inset 0 0 0 3px rgba(255,255,255,.035)}
+html[data-theme="escuro"] .mission-patch-copy small{color:#b4c1aa}
+html[data-theme="escuro"] .mission-patch-copy strong{color:#e3e8df}
+html[data-theme="escuro"] .mission-patch-check{border-color:#788773}
+html[data-theme="escuro"] .mission-patch.selected .mission-patch-check{border-color:#bd9b51;background:#bd9b51;color:#211f17}
+@media(max-width:620px){.mission-buttons{grid-template-columns:1fr;gap:8px}.mission-patch{min-height:66px;padding:9px 13px}.mission-patch-copy strong{font-size:12px}}

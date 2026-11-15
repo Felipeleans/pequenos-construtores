@@ -473,11 +473,15 @@ function renderizarCategorias() {
 }
 function renderizarMissoes() {
   const select = document.querySelector("#mission-select");
+  const botaoMissoes = document.querySelector("#mission-buttons");
+  const missaoSelecionada = select.value;
   const missoes = categoriaSelecionada && criancaSelecionada ? (CATALOGO[categoriaSelecionada] || []).filter(m => !registros.some(r => r.id !== registroEditandoId && r.criancaId === criancaSelecionada && r.categoriaId === categoriaSelecionada && (r.missaoId === m.id || (!r.missaoId && r.missao === m.nome)))) : [];
   select.disabled = !categoriaSelecionada || !criancaSelecionada || !missoes.length;
   select.innerHTML = missoes.map(m => `<option value="${m.id}">${escapar(m.nome)}</option>`).join("");
-  select.selectedIndex = -1;
-  const estado = !criancaSelecionada ? "Selecione uma criança para ver as missões." : !categoriaSelecionada ? "Escolha uma categoria para ver as missões." : !missoes.length ? "Esta criança já concluiu todas as missões desta categoria." : "";
+  select.value = missoes.some(m => m.id === missaoSelecionada) ? missaoSelecionada : "";
+  const categoria = CATEGORIAS.find(item => item.id === categoriaSelecionada);
+  botaoMissoes.innerHTML = missoes.map((missao, indice) => `<button type="button" class="mission-patch ${select.value === missao.id ? "selected" : ""}" data-mission="${escaparAtributo(missao.id)}" aria-pressed="${select.value === missao.id}"><span class="mission-patch-emblem">${categoria ? iconeBordado(categoria, true) : ""}</span><span class="mission-patch-copy"><small>MISSÃO ${String(indice + 1).padStart(2, "0")}</small><strong>${escapar(missao.nome)}</strong></span><span class="mission-patch-check" aria-hidden="true">✓</span></button>`).join("");
+  const estado = !criancaSelecionada ? "Selecione uma criança para ver as missões." : !categoriaSelecionada ? "Escolha uma categoria para ver as missões." : !missoes.length ? "Esta criança já concluiu todas as missões desta categoria." : "Toque em uma missão para ver a descrição.";
   document.querySelector("#mission-list-status").textContent = estado;
   atualizarBotao();
 }
@@ -888,6 +892,7 @@ function iniciarEdicaoRegistro(id) {
   renderizarMissoes();
   const missaoAtual = (CATALOGO[categoriaSelecionada] || []).find(item => item.id === registro.missaoId || (!registro.missaoId && item.nome === registro.missao));
   document.querySelector("#mission-select").value = missaoAtual?.id || "";
+  renderizarMissoes();
   document.querySelector("#register-title").textContent = "Editar registro";
   document.querySelector("#form-feedback").textContent = "Altere os dados necessários e salve as correções.";
   document.querySelector("#edit-actions").hidden = false;
@@ -946,6 +951,17 @@ document.querySelector("#progress-search").addEventListener("input", e => render
 document.querySelector("#bonus-history-search").addEventListener("input", () => renderizarPodio());
 document.querySelector("#child-list").addEventListener("click", e => { const botao = e.target.closest("[data-child]"); if (!botao) return; criancaSelecionada = botao.dataset.child; renderizarCriancas(document.querySelector("#child-search").value); renderizarMissoes(); renderizarDescricaoMissao(); });
 document.querySelector("#mission-select").addEventListener("change", () => { atualizarBotao(); renderizarDescricaoMissao(); });
+document.querySelector("#mission-buttons").addEventListener("click", evento => {
+  const botao = evento.target.closest("[data-mission]");
+  if (!botao) return;
+  document.querySelector("#mission-select").value = botao.dataset.mission;
+  document.querySelector("#mission-buttons").querySelectorAll("[data-mission]").forEach(item => {
+    const selecionado = item === botao;
+    item.classList.toggle("selected", selecionado);
+    item.setAttribute("aria-pressed", String(selecionado));
+  });
+  document.querySelector("#mission-select").dispatchEvent(new Event("change", { bubbles: true }));
+});
 document.querySelector("#category-list").addEventListener("click", e => { const botao = e.target.closest("[data-category]"); if (!botao) return; categoriaSelecionada = botao.dataset.category; renderizarCategorias(); renderizarMissoes(); renderizarDescricaoMissao(); });
 document.querySelectorAll(".section-tab").forEach(botao => botao.addEventListener("click", () => mostrarArea(botao.dataset.view)));
 document.querySelector("#bonus-form").addEventListener("submit", registrarPontosExtras);
