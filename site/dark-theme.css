@@ -79,6 +79,7 @@ html[data-theme="escuro"] .save-description-button:hover{background:#393939}
 .login-screen{min-height:100vh;display:grid;place-items:center;padding:24px;background:#f4f6f1}
 .login-card{width:min(100%,390px);background:#fff;border:1px solid #e8ece6;border-radius:18px;padding:32px;box-shadow:0 20px 60px rgba(28,55,42,.09)}
 .login-mark{display:grid;place-items:center;width:48px;height:48px;border-radius:15px;background:#173d32;color:#f1d69f;font-size:27px;margin-bottom:20px}
+.login-logo{display:block;width:80px;height:80px;object-fit:contain;border-radius:14px;margin-bottom:20px}
 .login-card h1{font-size:23px;margin:0}.login-copy{font-size:12px;line-height:1.5;color:#748078;margin:9px 0 22px}.login-card>label{display:block;font-size:10px;font-weight:700;color:#536257;margin-bottom:6px}.login-card .mission-select{margin-bottom:12px}.login-note{font-size:9px;line-height:1.5;text-align:center;color:#89948c;margin:11px 0 0}
 .section-nav{display:flex;gap:6px;margin:0 0 22px;padding:4px;background:#e9eee8;border-radius:10px;width:max-content;max-width:100%;overflow:auto}
 .section-tab{border:0;border-radius:7px;background:transparent;color:#65736a;padding:9px 13px;font:600 11px 'DM Sans',sans-serif;white-space:nowrap;cursor:pointer}
