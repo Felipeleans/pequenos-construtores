@@ -976,7 +976,15 @@ function definirStatusSincronizacao(estado, rotulo, detalhe, feedback = "") {
     topStatus.querySelector("i").style.background = estado === "synced" ? "#74ad79" : estado === "syncing" ? "#d2ad58" : "#d49a46";
   }
   const botao = document.querySelector("#sync-now");
-  if (botao) { botao.disabled = estado === "syncing"; botao.setAttribute("aria-busy", String(estado === "syncing")); }
+  if (botao) {
+    const conectado = !!NUVEM?.configurado() && !!NUVEM?.lerSessao()?.access_token;
+    const texto = document.querySelector("#sync-now-label");
+    const icone = botao.querySelector("span[aria-hidden='true']");
+    if (texto) texto.textContent = conectado ? "Sincronizar agora" : "Conectar à equipe";
+    if (icone) icone.textContent = conectado ? "⟳" : "↗";
+    botao.disabled = estado === "syncing";
+    botao.setAttribute("aria-busy", String(estado === "syncing"));
+  }
 }
 function sincronizarEmSegundoPlano() {
   if (!NUVEM?.configurado() || !NUVEM?.lerSessao()?.access_token || !navigator.onLine) return Promise.resolve({ synced: false, pending: true });
@@ -1100,8 +1108,12 @@ document.querySelector("#sync-now").addEventListener("click", async () => {
     definirStatusSincronizacao("offline", "Sem conexão", "As alterações continuam guardadas neste aparelho e serão enviadas quando a internet voltar.", "Conecte-se à internet para sincronizar agora.");
     return;
   }
-  if (!NUVEM?.configurado() || !NUVEM?.lerSessao()?.access_token) {
-    definirStatusSincronizacao("local", "Somente neste aparelho", "Entre na equipe para compartilhar os dados com os outros aparelhos.", "A sincronização entre aparelhos requer uma conta da equipe conectada.");
+  if (!NUVEM?.configurado()) {
+    definirStatusSincronizacao("error", "Conexão indisponível", "Não foi possível carregar a configuração da equipe. Atualize o aplicativo quando estiver conectado à internet.");
+    return;
+  }
+  if (!NUVEM?.lerSessao()?.access_token) {
+    abrirLogin(true);
     return;
   }
   definirStatusSincronizacao("syncing", "Sincronizando…", "Enviando e recebendo crianças, missões, registros e pontos.");
@@ -1124,21 +1136,34 @@ document.querySelector("#logout-button").addEventListener("click", () => {
   document.querySelector("#login-screen").hidden = true;
   alternarAbaAcesso("login");
 });
-const abrirLogin = () => {
+const abrirLogin = (orientarConexao = false) => {
   document.querySelector("#public-home").hidden = true;
   document.querySelector("#login-screen").hidden = false;
+  if (usuarioAtual) {
+    document.querySelector(".topbar").hidden = true;
+    document.querySelector("#inicio").hidden = true;
+  }
   document.querySelector("#reset-pin-form").hidden = true;
   document.querySelector("#login-form").hidden = false;
   document.querySelector(".auth-tabs").hidden = false;
   document.querySelector("#login-team-code").value = NUVEM?.lerCodigoEquipe() || "";
-  if (document.querySelector("#login-team-code").value) carregarEquipeRemota(document.querySelector("#login-team-code").value);
-  document.querySelector("#login-name").focus();
+  document.querySelector("#login-status").textContent = orientarConexao
+    ? "Este aparelho ainda está no modo local. Informe o código da equipe, carregue os nomes e entre com seu nome e PIN para conectar."
+    : "";
+  if (document.querySelector("#login-team-code").value) {
+    carregarEquipeRemota(document.querySelector("#login-team-code").value);
+    document.querySelector("#login-name").focus();
+  } else document.querySelector("#login-team-code").focus();
 };
 document.querySelector("#home-login-button").addEventListener("click", abrirLogin);
 document.querySelector("#home-login-top").addEventListener("click", abrirLogin);
 document.querySelector("#back-home-button").addEventListener("click", () => {
   document.querySelector("#login-screen").hidden = true;
-  document.querySelector("#public-home").hidden = false;
+  if (usuarioAtual) {
+    document.querySelector("#public-home").hidden = true;
+    document.querySelector(".topbar").hidden = false;
+    document.querySelector("#inicio").hidden = false;
+  } else document.querySelector("#public-home").hidden = false;
 });
 document.querySelector("#record-form").addEventListener("submit", e => {
   e.preventDefault(); if (document.querySelector("#save-button").disabled) return;
