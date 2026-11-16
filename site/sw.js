@@ -1,4 +1,4 @@
-const CACHE = "pequenos-construtores-v45";
+const CACHE = "pequenos-construtores-v46";
 const ARQUIVOS = ["./", "./index.html", "./styles.css", "./dark-theme.css", "./auth-theme.css", "./app.js", "./cloud-config.js", "./cloud-sync.js", "./manifest.webmanifest", "./icon.svg", "./assets/home-pequenos-construtores.png", "./assets/categoria-guardiao.png", "./assets/categoria-explorador.png", "./assets/categoria-construtor.png", "./assets/categoria-servo-fiel.png"];
 self.addEventListener("install", evento => evento.waitUntil(caches.open(CACHE).then(cache => cache.addAll(ARQUIVOS))));
 self.addEventListener("activate", evento => evento.waitUntil(caches.keys().then(chaves => Promise.all(chaves.filter(chave => chave !== CACHE).map(chave => caches.delete(chave))))));

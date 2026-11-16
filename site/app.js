@@ -437,13 +437,8 @@ function salvarRegistros() { localStorage.setItem(CHAVE, JSON.stringify(registro
 function salvarCatalogo() { localStorage.setItem(CHAVE_CATALOGO, JSON.stringify(CATALOGO)); agendarSincronizacao(); }
 function escapar(texto) { return String(texto).replace(/[&<>"']/g, c => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" })[c]); }
 function iconeBordado(categoria, pequeno = false) {
-  const desenhos = {
-    guardiao: `<path class="thread-shadow" d="M32 14 44 18v11c0 8-5 14-12 19-7-5-12-11-12-19V18z"/><path class="thread-fill" d="M32 16 42 20v9c0 7-4 12-10 17-6-5-10-10-10-17v-9z"/><path class="thread-light" d="M32 23v14M26 27c2-1 4 0 6 2 2-2 4-3 6-2v12c-2-1-4 0-6 2-2-2-4-3-6-2z"/><path class="thread-gold" d="M32 25v12"/>`,
-    explorador: `<circle class="thread-shadow" cx="32" cy="31" r="14"/><circle class="thread-fill" cx="32" cy="31" r="11"/><path class="thread-light" d="m32 18 3.7 10.2L46 32l-10.3 3.7L32 46l-3.7-10.3L18 32l10.3-3.8z"/><path class="thread-gold" d="m32 21 2.1 9-2.1 2-2.1-2zM32 43l-2.1-9 2.1-2 2.1 2z"/>`,
-    construtor: `<path class="thread-shadow" d="m21 21 4-4 8 8-4 4zM29 27l4-4 9 9-4 4zM30 29 20 44l3 3 12-13"/><path class="thread-fill" d="m20 20 4-4 8 8-4 4zM28 26l4-4 9 9-4 4z"/><path class="thread-light" d="m30 29 4 4-11 14-4-4z"/><path class="thread-gold" d="m21 20 3-3 7 7-3 3zM30 27l2-2 7 7-2 2z"/>`,
-    servo: `<path class="thread-shadow" d="M32 40c-2-2-15-10-15-18a8 8 0 0 1 15-4 8 8 0 0 1 15 4c0 8-13 16-15 18z"/><path class="thread-fill" d="M32 37c-2-2-12-9-12-15a6 6 0 0 1 12-2 6 6 0 0 1 12 2c0 6-10 13-12 15z"/><path class="thread-light" d="M18 40c5 1 9 4 14 7 5-3 9-6 14-7M18 40l-3 5 4 4 9-1M46 40l3 5-4 4-9-1"/><path class="thread-gold" d="M20 42c4 2 7 4 12 7 5-3 8-5 12-7"/>`
-  };
-  return `<svg class="badge-art${pequeno ? " badge-art-small" : ""}" viewBox="0 0 64 64" aria-hidden="true" focusable="false"><circle class="badge-cloth" cx="32" cy="32" r="28"/><circle class="badge-seam" cx="32" cy="32" r="25"/><circle class="badge-inner" cx="32" cy="32" r="21"/>${desenhos[categoria.id] || ""}<circle class="badge-center-stitch" cx="32" cy="32" r="18.5"/></svg>`;
+  if (!categoria?.imagem) return "";
+  return `<img class="badge-art${pequeno ? " badge-art-small" : ""}" src="${categoria.imagem}" alt="" loading="lazy" decoding="async">`;
 }
 function renderizarCriancas(filtro = "") {
   const lista = document.querySelector("#child-list");

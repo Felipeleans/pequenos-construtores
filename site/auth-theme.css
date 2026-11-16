@@ -323,7 +323,7 @@ body,body button,body input,body select,body textarea,svg text{font-family:syste
 h1,h2,h3{line-height:1.2;text-wrap:balance}
 button:focus-visible,a:focus-visible,input:focus-visible,select:focus-visible,textarea:focus-visible{outline:3px solid #d2ad58!important;outline-offset:3px}
 .panel,.stat-card{border-radius:16px}
-.badge-art{shape-rendering:geometricPrecision;filter:drop-shadow(0 2px 2px rgba(29,43,30,.2))}
+.badge-art{shape-rendering:geometricPrecision;filter:drop-shadow(0 2px 2px rgba(29,43,30,.2));border-radius:50%;object-fit:cover}
 .badge-art-small{filter:drop-shadow(0 1px 1px rgba(29,43,30,.2))}
 .mission-field>.field-label{display:block;margin-bottom:9px}
 .mission-buttons{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:10px}
