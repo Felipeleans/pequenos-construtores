@@ -900,7 +900,8 @@ function registrarPontosExtras(evento) {
 }
 function renderizarProgresso(filtro = document.querySelector("#progress-search").value) {
   const termo = filtro.trim().toLocaleLowerCase("pt-BR");
-  const encontradas = CRIANCAS.filter(crianca => !crianca.nova && `${nomeCrianca(crianca)} ${crianca.idade} ${crianca.igreja} ${CATEGORIAS.find(cat => cat.id === crianca.categoriaRepresentativa)?.nome || ""}`.toLocaleLowerCase("pt-BR").includes(termo));
+  const encontradas = CRIANCAS.filter(crianca => !crianca.nova && `${nomeCrianca(crianca)} ${crianca.idade} ${crianca.igreja} ${CATEGORIAS.find(cat => cat.id === crianca.categoriaRepresentativa)?.nome || ""}`.toLocaleLowerCase("pt-BR").includes(termo))
+    .sort((a, b) => Number(a.id.match(/(\d+)$/)?.[1] || 0) - Number(b.id.match(/(\d+)$/)?.[1] || 0));
   const lista = document.querySelector("#children-progress");
   if (!encontradas.length) { lista.innerHTML = `<div class="empty-state"><p>Nenhuma criança encontrada.</p></div>`; return; }
   lista.innerHTML = encontradas.map(crianca => {
