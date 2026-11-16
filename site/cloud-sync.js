@@ -145,11 +145,14 @@
     const teamId = session.user?.app_metadata?.team_id || session.user?.user_metadata?.team_id;
     if (!teamId) throw new Error("A sessão não está vinculada à equipe.");
     const query = "/rest/v1/sync_rows?select=collection,row_id,content,deleted,updated_at&order=updated_at.asc";
+    // Capture local data before any network wait. A registration can be saved while
+    // either request below is in flight, so the final response must not erase it.
+    const localAtStart = currentContents(snapshot());
     const remote = await request(query);
     const base = readBase();
     const baseMap = rowsKey(base || []);
     const remoteMap = rowsKey(remote || []);
-    const local = currentContents(snapshot());
+    const local = localAtStart;
     const remoteData = { children: [], missions: [], records: [], bonus: [] };
     const pending = [];
     const collections = ["children", "missions", "records", "bonus"];
@@ -222,9 +225,29 @@
     for (const collection of collections) {
       remoteData[collection] = [...freshMap.values()].filter(row => row.collection === collection && !row.deleted).map(row => ({ ...row.content, id: row.row_id }));
     }
+    // Preserve writes made after localAtStart. The base still records the server
+    // snapshot, allowing the next sync to upload these intervening changes.
+    const localNow = currentContents(snapshot());
+    let changedDuringSync = false;
+    for (const collection of collections) {
+      const startMap = localAtStart[collection];
+      const nowMap = localNow[collection];
+      const mergedMap = new Map(remoteData[collection].map(item => [String(item.id), item]));
+      const ids = new Set([...startMap.keys(), ...nowMap.keys()]);
+      for (const id of ids) {
+        const before = startMap.get(id) || null;
+        const after = nowMap.get(id) || null;
+        if (same(before, after)) continue;
+        changedDuringSync = true;
+        if (after) mergedMap.set(id, after);
+        else mergedMap.delete(id);
+      }
+      remoteData[collection] = [...mergedMap.values()];
+    }
     writeLocal(remoteData);
     localStorage.setItem(BASE_KEY, JSON.stringify(fresh || []));
     window.dispatchEvent(new CustomEvent("pc-cloud-synced", { detail: { pending: 0, teamId } }));
+    if (changedDuringSync) scheduleSync();
     return { synced: true, pending: false, rows: fresh?.length || 0 };
   }
   function sync() {
@@ -235,7 +258,9 @@
   function scheduleSync() {
     clearTimeout(syncTimer);
     if (!navigator.onLine || !lerSessao()?.access_token) return;
-    syncTimer = setTimeout(() => sync().catch(() => {}), 700);
+    syncTimer = setTimeout(() => sync().catch(erro => {
+      window.dispatchEvent(new CustomEvent("pc-cloud-sync-error", { detail: { message: erro?.message || "Falha ao sincronizar com a equipe." } }));
+    }), 700);
   }
   window.addEventListener("online", () => sync().catch(() => {}));
   window.PequenosConstrutoresCloud = {

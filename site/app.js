@@ -618,27 +618,34 @@ function salvarCadastroCriancas() {
     document.querySelector(`[data-child-age="${idadeInvalida.crianca.id}"]`).focus();
     return;
   }
-  valores.forEach(item => Object.assign(item.crianca, { nome: item.nome, idade: item.idade, igreja: item.igreja, categoriaRepresentativa: item.categoriaRepresentativa }));
+  const persistidas = valores.map(({ crianca, ...dados }) => {
+    const { nova, ...existente } = crianca;
+    return { ...existente, ...dados };
+  });
   try {
-    const persistidas = CRIANCAS.map(({ nova, ...crianca }) => crianca);
     localStorage.setItem(CHAVE_CRIANCAS, JSON.stringify(persistidas));
-    agendarSincronizacao();
-    CRIANCAS = persistidas;
-    const idRecemCadastrada = criancaNovaId;
-    criancaNovaId = "";
-    renderizarCadastroCriancas(); renderizarCriancas(document.querySelector("#child-search").value);
-    renderizarProgresso(document.querySelector("#progress-search").value);
-    document.querySelector("#children-feedback").textContent = "Cadastro das crianças salvo neste aparelho.";
-    if (retornarAosRegistros && idRecemCadastrada) {
-      const novaCrianca = CRIANCAS.find(crianca => crianca.id === idRecemCadastrada);
-      retornarAosRegistros = false;
-      if (novaCrianca) {
-        mostrarArea("view-dashboard"); criancaSelecionada = novaCrianca.id;
-        document.querySelector("#child-search").value = nomeCrianca(novaCrianca);
-        renderizarCriancas(nomeCrianca(novaCrianca)); renderizarMissoes(); renderizarDescricaoMissao();
-      }
+    const confirmacao = JSON.parse(localStorage.getItem(CHAVE_CRIANCAS) || "null");
+    if (!Array.isArray(confirmacao) || confirmacao.length !== persistidas.length) throw new Error("A gravação não foi confirmada.");
+  } catch {
+    document.querySelector("#children-feedback").textContent = "Não foi possível confirmar o salvamento. Confira os campos e tente novamente; seus dados continuam preenchidos.";
+    return;
+  }
+  CRIANCAS = persistidas;
+  const idRecemCadastrada = criancaNovaId;
+  criancaNovaId = "";
+  agendarSincronizacao();
+  renderizarCadastroCriancas(); renderizarCriancas(document.querySelector("#child-search").value);
+  renderizarProgresso(document.querySelector("#progress-search").value);
+  document.querySelector("#children-feedback").textContent = `${persistidas.length} ${persistidas.length === 1 ? "cadastro salvo" : "cadastros salvos"} neste aparelho.`;
+  if (retornarAosRegistros && idRecemCadastrada) {
+    const novaCrianca = CRIANCAS.find(crianca => crianca.id === idRecemCadastrada);
+    retornarAosRegistros = false;
+    if (novaCrianca) {
+      mostrarArea("view-dashboard"); criancaSelecionada = novaCrianca.id;
+      document.querySelector("#child-search").value = nomeCrianca(novaCrianca);
+      renderizarCriancas(nomeCrianca(novaCrianca)); renderizarMissoes(); renderizarDescricaoMissao();
     }
-  } catch { document.querySelector("#children-feedback").textContent = "Não foi possível salvar o cadastro neste aparelho."; }
+  }
 }
 function renderizarEditorMissoes() {
   const ehPrincipal = ehInstrutorPrincipal();
@@ -1005,6 +1012,9 @@ document.querySelector("#copy-team-code").addEventListener("click", async () => 
 window.addEventListener("pc-cloud-updated", aplicarDadosDaNuvem);
 window.addEventListener("pc-cloud-synced", () => {
   document.querySelector("#sync-status").innerHTML = `<i style="background:#74ad79"></i><span>Sincronizado com a equipe</span>`;
+});
+window.addEventListener("pc-cloud-sync-error", () => {
+  document.querySelector("#sync-status").innerHTML = `<i style="background:#d49a46"></i><span>Salvo neste aparelho · aguardando sincronização</span>`;
 });
 document.querySelector("#logout-button").addEventListener("click", () => {
   localStorage.removeItem(CHAVE_LOGIN_AUTOMATICO);
