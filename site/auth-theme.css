@@ -154,6 +154,7 @@ html[data-theme="escuro"] .category-option.selected strong{color:#c3ddc1}
 .roster-actions{display:flex;align-items:center;gap:7px}
 .remove-child-button{align-self:end;border:1px solid #e6d7d2;border-radius:7px;background:#fff;color:#8a5545;padding:7px 9px;font:600 9px 'DM Sans',sans-serif;cursor:pointer}
 .remove-child-button:hover{background:#fbf1ed}
+.child-edit-row>.remove-child-button{grid-column:2/-1;justify-self:end;min-width:74px}
 .new-child-row{border-style:dashed;border-color:#8ea98e}
 .child-progress-name-line.has-progress h3{color:#356543}
 .child-progress-name-line.complete h3{color:#9b702d}
