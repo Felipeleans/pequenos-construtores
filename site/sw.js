@@ -1,5 +1,5 @@
-const CACHE = "pequenos-construtores-v54";
-const ARQUIVOS = ["./", "./index.html", "./styles.css", "./dark-theme.css", "./auth-theme.css", "./app.js?v=20261116-3", "./cloud-config.js?v=20261116-1", "./cloud-sync.js?v=20261116-3", "./manifest.webmanifest", "./icon.svg", "./assets/home-pequenos-construtores.png", "./assets/logo-pequenos-construtores.png", "./assets/categoria-guardiao.png", "./assets/categoria-explorador.png", "./assets/categoria-construtor.png", "./assets/categoria-servo-fiel.png"];
+const CACHE = "pequenos-construtores-v55";
+const ARQUIVOS = ["./", "./index.html", "./styles.css", "./dark-theme.css", "./auth-theme.css", "./app.js?v=20261116-4", "./cloud-config.js?v=20261116-1", "./cloud-sync.js?v=20261116-3", "./manifest.webmanifest", "./icon.svg", "./assets/home-pequenos-construtores.png", "./assets/logo-pequenos-construtores.png", "./assets/categoria-guardiao.png", "./assets/categoria-explorador.png", "./assets/categoria-construtor.png", "./assets/categoria-servo-fiel.png"];
 self.addEventListener("install", evento => evento.waitUntil(caches.open(CACHE).then(cache => cache.addAll(ARQUIVOS)).then(() => self.skipWaiting())));
 self.addEventListener("activate", evento => evento.waitUntil(caches.keys().then(chaves => Promise.all(chaves.filter(chave => chave !== CACHE).map(chave => caches.delete(chave)))).then(() => self.clients.claim())));
 self.addEventListener("fetch", evento => {

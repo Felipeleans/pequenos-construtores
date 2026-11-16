@@ -4,7 +4,6 @@ const CATEGORIAS = [
   { id: "construtor", nome: "Construtor", icone: "⚒", cor: "#bd8841", imagem: "./assets/categoria-construtor.png" },
   { id: "servo", nome: "Servo Fiel", icone: "♡", cor: "#81699a", imagem: "./assets/categoria-servo-fiel.png" }
 ];
-const LIMITE_CRIANCAS = 30;
 const CHAVE = "pequenos-construtores-registros-v1";
 const CHAVE_TEMA = "pequenos-construtores-tema-v1";
 const CHAVE_DESCRICOES = "pequenos-construtores-descricoes-v1";
@@ -464,9 +463,9 @@ function renderizarCriancas(filtro = "") {
   const termo = filtro.trim().toLocaleLowerCase("pt-BR");
   const cadastradas = CRIANCAS.filter(crianca => !crianca.nova && !crianca.arquivada);
   const totalCriancas = document.querySelector("#children-count");
-  if (totalCriancas) totalCriancas.textContent = `${cadastradas.length}/${LIMITE_CRIANCAS}`;
+  if (totalCriancas) totalCriancas.textContent = String(cadastradas.length);
   const atalhoAdicionar = document.querySelector("#add-child-from-record");
-  if (atalhoAdicionar) atalhoAdicionar.disabled = CRIANCAS.filter(crianca => !crianca.nova && !crianca.arquivada).length + CRIANCAS.filter(crianca => crianca.nova).length >= LIMITE_CRIANCAS;
+  if (atalhoAdicionar) atalhoAdicionar.disabled = false;
   const encontradas = cadastradas.filter(c => `${nomeCrianca(c)} ${c.idade} ${c.igreja} ${CATEGORIAS.find(cat => cat.id === c.categoriaRepresentativa)?.nome || ""} ${c.id}`.toLocaleLowerCase("pt-BR").includes(termo));
   lista.innerHTML = encontradas.length ? encontradas.map(c => {
     const total = totalMissoesConcluidas(c);
@@ -537,16 +536,15 @@ function renderizarCadastroCriancas() {
   const alternar = document.querySelector("#toggle-archived-children");
   alternar.textContent = mostrarCriancasArquivadas ? "Ver crianças ativas" : `Ver arquivadas (${CRIANCAS.filter(crianca => crianca.arquivada).length})`;
   alternar.setAttribute("aria-pressed", String(mostrarCriancasArquivadas));
-  editor.innerHTML = exibidas.length ? exibidas.map(crianca => `<div class="child-edit-row ${crianca.nova ? "new-child-row" : ""} ${edicoesPendentesCadastro.has(crianca.id) ? "unsaved-child-row" : ""} ${crianca.arquivada ? "archived-child-row" : ""}"><span class="child-edit-number">#${crianca.id.slice(-2)}</span><label class="child-name-field"><span>Nome</span><input type="text" maxlength="70" data-child-name="${crianca.id}" value="${escapar(crianca.nome)}" placeholder="Nome da criança"></label><label class="child-age-field"><span>Idade</span><select data-child-age="${crianca.id}"><option value="" disabled ${crianca.idade ? "" : "selected"}>Selecione</option>${Array.from({ length: 7 }, (_, i) => `<option value="${i + 6}" ${crianca.idade === i + 6 ? "selected" : ""}>${i + 6} anos</option>`).join("")}</select></label><label class="child-church-field"><span>Igreja</span><input type="text" maxlength="100" data-child-church="${crianca.id}" value="${escapar(crianca.igreja)}" placeholder="Nome da igreja"></label><label class="child-category-field"><span>Categoria representativa</span><select data-child-category="${crianca.id}"><option value="">Sem categoria</option>${CATEGORIAS.map(categoria => `<option value="${categoria.id}" ${crianca.categoriaRepresentativa === categoria.id ? "selected" : ""}>${categoria.nome}</option>`).join("")}</select></label><div class="child-row-actions"><button type="button" class="primary-button child-row-save" data-save-child="${crianca.id}">${edicoesPendentesCadastro.has(crianca.id) ? "Salvar alterações" : "Salvar criança"}</button>${crianca.nova ? `<button type="button" class="remove-child-button" data-remove-child="${crianca.id}">Cancelar</button>` : `${crianca.arquivada ? `<button type="button" class="secondary-button child-roster-action" data-restore-child="${crianca.id}">Restaurar</button>` : `<button type="button" class="remove-child-button child-roster-action" data-archive-child="${crianca.id}">Arquivar</button>`}<button type="button" class="delete-child-button" data-delete-child="${crianca.id}" aria-label="Excluir definitivamente ${escapar(nomeCrianca(crianca))}">Excluir</button>`}</div></div>`).join("") : `<div class="empty-state"><span aria-hidden="true">♙</span><p>${mostrarCriancasArquivadas ? "Nenhuma criança arquivada." : "Nenhuma criança ativa cadastrada ainda. Use “Adicionar criança” para começar."}</p></div>`;
+  editor.innerHTML = exibidas.length ? exibidas.map(crianca => `<div class="child-edit-row ${crianca.nova ? "new-child-row" : ""} ${edicoesPendentesCadastro.has(crianca.id) ? "unsaved-child-row" : ""} ${crianca.arquivada ? "archived-child-row" : ""}"><span class="child-edit-number">#${String(crianca.id.match(/(\d+)$/)?.[1] || "").padStart(2, "0")}</span><label class="child-name-field"><span>Nome</span><input type="text" maxlength="70" data-child-name="${crianca.id}" value="${escapar(crianca.nome)}" placeholder="Nome da criança"></label><label class="child-age-field"><span>Idade</span><select data-child-age="${crianca.id}"><option value="" disabled ${crianca.idade ? "" : "selected"}>Selecione</option>${Array.from({ length: 7 }, (_, i) => `<option value="${i + 6}" ${crianca.idade === i + 6 ? "selected" : ""}>${i + 6} anos</option>`).join("")}</select></label><label class="child-church-field"><span>Igreja</span><input type="text" maxlength="100" data-child-church="${crianca.id}" value="${escapar(crianca.igreja)}" placeholder="Nome da igreja"></label><label class="child-category-field"><span>Categoria representativa</span><select data-child-category="${crianca.id}"><option value="">Sem categoria</option>${CATEGORIAS.map(categoria => `<option value="${categoria.id}" ${crianca.categoriaRepresentativa === categoria.id ? "selected" : ""}>${categoria.nome}</option>`).join("")}</select></label><div class="child-row-actions"><button type="button" class="primary-button child-row-save" data-save-child="${crianca.id}">${edicoesPendentesCadastro.has(crianca.id) ? "Salvar alterações" : "Salvar criança"}</button>${crianca.nova ? `<button type="button" class="remove-child-button" data-remove-child="${crianca.id}">Cancelar</button>` : `${crianca.arquivada ? `<button type="button" class="secondary-button child-roster-action" data-restore-child="${crianca.id}">Restaurar</button>` : `<button type="button" class="remove-child-button child-roster-action" data-archive-child="${crianca.id}">Arquivar</button>`}<button type="button" class="delete-child-button" data-delete-child="${crianca.id}" aria-label="Excluir definitivamente ${escapar(nomeCrianca(crianca))}">Excluir</button>`}</div></div>`).join("") : `<div class="empty-state"><span aria-hidden="true">♙</span><p>${mostrarCriancasArquivadas ? "Nenhuma criança arquivada." : "Nenhuma criança ativa cadastrada ainda. Use “Adicionar criança” para começar."}</p></div>`;
   document.querySelectorAll("[data-child-church]").forEach(campo => campo.setAttribute("list", "church-options"));
   renderizarListaIgrejas();
-  document.querySelector("#add-child").disabled = CRIANCAS.filter(crianca => !crianca.arquivada).length >= LIMITE_CRIANCAS;
+  document.querySelector("#add-child").disabled = false;
   renderizarCriancas(document.querySelector("#child-search").value);
 }
 function adicionarCrianca() {
-  if (CRIANCAS.filter(crianca => !crianca.arquivada).length >= LIMITE_CRIANCAS) { document.querySelector("#children-feedback").textContent = "O grupo já atingiu o limite de 30 crianças ativas."; return; }
   const usados = new Set(CRIANCAS.map(crianca => Number(crianca.id.match(/(\d+)$/)?.[1])).filter(Boolean));
-  let numero = 1; while (usados.has(numero) && numero <= LIMITE_CRIANCAS) numero++;
+  let numero = 1; while (usados.has(numero)) numero++;
   const id = `crianca-${String(numero).padStart(2, "0")}`;
   CRIANCAS.push({ id, nome: "", idade: 0, igreja: "", categoriaRepresentativa: "", nova: true });
   criancaNovaId = id;
@@ -739,7 +737,7 @@ function renderizarResumo() {
 }
 function renderizarHome() {
   const cadastradas = CRIANCAS.filter(crianca => !crianca.nova && !crianca.arquivada);
-  document.querySelector("#home-children-count").textContent = `${cadastradas.length}/${LIMITE_CRIANCAS}`;
+  document.querySelector("#home-children-count").textContent = String(cadastradas.length);
   document.querySelector("#home-record-count").textContent = String(registros.length);
   document.querySelector("#home-pending-count").textContent = String(registros.filter(registro => !registro.sincronizado).length);
   document.querySelector("#home-category-summary").innerHTML = CATEGORIAS.map(categoria => {
@@ -1049,7 +1047,6 @@ document.querySelector("#children-editor").addEventListener("click", e => { cons
 document.querySelector("#children-editor").addEventListener("click", e => { const arquivar = e.target.closest("[data-archive-child]"); const restaurar = e.target.closest("[data-restore-child]"); const excluir = e.target.closest("[data-delete-child]"); if (arquivar) definirArquivoCrianca(arquivar.dataset.archiveChild, true); else if (restaurar) definirArquivoCrianca(restaurar.dataset.restoreChild, false); else if (excluir) excluirCriancaDefinitivamente(excluir.dataset.deleteChild); });
 document.querySelector("#toggle-archived-children").addEventListener("click", () => { mostrarCriancasArquivadas = !mostrarCriancasArquivadas; renderizarCadastroCriancas(); });
 document.querySelector("#add-child-from-record").addEventListener("click", () => {
-  if (CRIANCAS.filter(crianca => !crianca.arquivada).length >= LIMITE_CRIANCAS) { document.querySelector("#form-feedback").textContent = "O grupo já atingiu o limite de 30 crianças ativas."; return; }
   retornarAosRegistros = true; mostrarArea("view-children"); adicionarCrianca();
 });
 document.querySelector("#children-editor").addEventListener("input", e => { if (e.target.closest("[data-child-church]")) renderizarListaIgrejas(); });
