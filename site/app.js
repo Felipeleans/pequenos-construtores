@@ -1,8 +1,8 @@
 const CATEGORIAS = [
-  { id: "guardiao", nome: "Guardião da Palavra", icone: "✧", cor: "#4d7656", imagem: "./assets/categoria-guardiao.png" },
-  { id: "explorador", nome: "Explorador", icone: "⌖", cor: "#51798b", imagem: "./assets/categoria-explorador.png" },
-  { id: "construtor", nome: "Construtor", icone: "⚒", cor: "#bd8841", imagem: "./assets/categoria-construtor.png" },
-  { id: "servo", nome: "Servo Fiel", icone: "♡", cor: "#81699a", imagem: "./assets/categoria-servo-fiel.png" }
+  { id: "guardiao", nome: "Guardião(ã) da Palavra", icone: "✧", cor: "#4d7656", imagem: "./assets/categoria-guardiao.png" },
+  { id: "explorador", nome: "Explorador(a)", icone: "⌖", cor: "#51798b", imagem: "./assets/categoria-explorador.png" },
+  { id: "construtor", nome: "Construtor(a)", icone: "⚒", cor: "#bd8841", imagem: "./assets/categoria-construtor.png" },
+  { id: "servo", nome: "Servo(a) Fiel", icone: "♡", cor: "#81699a", imagem: "./assets/categoria-servo-fiel.png" }
 ];
 const CHAVE = "pequenos-construtores-registros-v1";
 const CHAVE_TEMA = "pequenos-construtores-tema-v1";
