@@ -1,8 +1,8 @@
 const CATEGORIAS = [
-  { id: "guardiao", nome: "Guardião da Palavra", icone: "✧", cor: "#4d7656" },
-  { id: "explorador", nome: "Explorador", icone: "⌖", cor: "#51798b" },
-  { id: "construtor", nome: "Construtor", icone: "⚒", cor: "#bd8841" },
-  { id: "servo", nome: "Servo Fiel", icone: "♡", cor: "#81699a" }
+  { id: "guardiao", nome: "Guardião da Palavra", icone: "✧", cor: "#4d7656", imagem: "./assets/categoria-guardiao.png" },
+  { id: "explorador", nome: "Explorador", icone: "⌖", cor: "#51798b", imagem: "./assets/categoria-explorador.png" },
+  { id: "construtor", nome: "Construtor", icone: "⚒", cor: "#bd8841", imagem: "./assets/categoria-construtor.png" },
+  { id: "servo", nome: "Servo Fiel", icone: "♡", cor: "#81699a", imagem: "./assets/categoria-servo-fiel.png" }
 ];
 const LIMITE_CRIANCAS = 30;
 const CHAVE = "pequenos-construtores-registros-v1";
@@ -469,7 +469,7 @@ function renderizarCriancas(filtro = "") {
   lista.classList.toggle("empty", !encontradas.length);
 }
 function renderizarCategorias() {
-  document.querySelector("#category-list").innerHTML = CATEGORIAS.map(c => `<button type="button" class="category-option ${categoriaSelecionada === c.id ? "selected" : ""}" data-category="${c.id}" aria-pressed="${categoriaSelecionada === c.id}"><span class="category-medallion"><span class="cat-icon">${iconeBordado(c)}</span></span><strong>${c.nome}</strong></button>`).join("");
+  document.querySelector("#category-list").innerHTML = CATEGORIAS.map(c => `<button type="button" class="category-option ${categoriaSelecionada === c.id ? "selected" : ""}" data-category="${c.id}" aria-pressed="${categoriaSelecionada === c.id}"><span class="category-medallion"><img class="category-image" src="${c.imagem}" alt="" width="112" height="112" decoding="async"></span><strong>${c.nome}</strong></button>`).join("");
 }
 function renderizarMissoes() {
   const select = document.querySelector("#mission-select");
