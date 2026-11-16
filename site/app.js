@@ -532,7 +532,8 @@ function totalMissoesConcluidas(crianca) { return CATEGORIAS.reduce((total, cate
 function totalMissoesDisponiveis() { return CATEGORIAS.reduce((total, categoria) => total + (CATALOGO[categoria.id] || []).length, 0); }
 function renderizarCadastroCriancas() {
   const editor = document.querySelector("#children-editor");
-  const exibidas = CRIANCAS.filter(crianca => Boolean(crianca.arquivada) === mostrarCriancasArquivadas);
+  const exibidas = CRIANCAS.filter(crianca => Boolean(crianca.arquivada) === mostrarCriancasArquivadas)
+    .sort((a, b) => Number(a.id.match(/(\d+)$/)?.[1] || 0) - Number(b.id.match(/(\d+)$/)?.[1] || 0));
   const alternar = document.querySelector("#toggle-archived-children");
   alternar.textContent = mostrarCriancasArquivadas ? "Ver crianças ativas" : `Ver arquivadas (${CRIANCAS.filter(crianca => crianca.arquivada).length})`;
   alternar.setAttribute("aria-pressed", String(mostrarCriancasArquivadas));
@@ -540,7 +541,22 @@ function renderizarCadastroCriancas() {
   document.querySelectorAll("[data-child-church]").forEach(campo => campo.setAttribute("list", "church-options"));
   renderizarListaIgrejas();
   document.querySelector("#add-child").disabled = false;
+  filtrarCadastroCriancas();
   renderizarCriancas(document.querySelector("#child-search").value);
+}
+function filtrarCadastroCriancas() {
+  const campo = document.querySelector("#children-roster-search");
+  const editor = document.querySelector("#children-editor");
+  if (!campo || !editor) return;
+  const termo = campo.value.trim().toLocaleLowerCase("pt-BR");
+  const linhas = [...editor.querySelectorAll(".child-edit-row")];
+  linhas.forEach(linha => {
+    const campos = ["[data-child-name]", "[data-child-age]", "[data-child-church]", "[data-child-category]", ".child-edit-number"];
+    const texto = campos.map(seletor => linha.querySelector(seletor)?.value ?? linha.querySelector(seletor)?.textContent ?? "").join(" ").toLocaleLowerCase("pt-BR");
+    linha.hidden = Boolean(termo) && !texto.includes(termo);
+  });
+  const resultadoVazio = document.querySelector("#children-search-empty");
+  if (resultadoVazio) resultadoVazio.hidden = !termo || !linhas.length || linhas.some(linha => !linha.hidden);
 }
 function adicionarCrianca() {
   const usados = new Set(CRIANCAS.map(crianca => Number(crianca.id.match(/(\d+)$/)?.[1])).filter(Boolean));
@@ -1046,6 +1062,9 @@ document.querySelector("#add-child").addEventListener("click", () => adicionarCr
 document.querySelector("#children-editor").addEventListener("click", e => { const salvar = e.target.closest("[data-save-child]"); const cancelar = e.target.closest("[data-remove-child]"); if (salvar) salvarCadastroCriancas(salvar.dataset.saveChild); else if (cancelar) cancelarNovaCrianca(cancelar.dataset.removeChild); });
 document.querySelector("#children-editor").addEventListener("click", e => { const arquivar = e.target.closest("[data-archive-child]"); const restaurar = e.target.closest("[data-restore-child]"); const excluir = e.target.closest("[data-delete-child]"); if (arquivar) definirArquivoCrianca(arquivar.dataset.archiveChild, true); else if (restaurar) definirArquivoCrianca(restaurar.dataset.restoreChild, false); else if (excluir) excluirCriancaDefinitivamente(excluir.dataset.deleteChild); });
 document.querySelector("#toggle-archived-children").addEventListener("click", () => { mostrarCriancasArquivadas = !mostrarCriancasArquivadas; renderizarCadastroCriancas(); });
+document.querySelector("#children-roster-search").addEventListener("input", filtrarCadastroCriancas);
+document.querySelector("#children-editor").addEventListener("input", filtrarCadastroCriancas);
+document.querySelector("#children-editor").addEventListener("change", filtrarCadastroCriancas);
 document.querySelector("#add-child-from-record").addEventListener("click", () => {
   retornarAosRegistros = true; mostrarArea("view-children"); adicionarCrianca();
 });

@@ -8,7 +8,7 @@
   <link rel="manifest" href="manifest.webmanifest">
   <link rel="stylesheet" href="styles.css">
   <link rel="stylesheet" href="dark-theme.css">
-  <link rel="stylesheet" href="auth-theme.css?v=20261116-2">
+  <link rel="stylesheet" href="auth-theme.css?v=20261116-3">
   <title>Pequenos Construtores | Painel do instrutor</title>
 </head>
 <body>
@@ -153,7 +153,7 @@
     </section>
     <section id="view-children" class="app-view" hidden>
       <div class="welcome-row"><div><p class="eyebrow">CADASTRO</p><h1>Crianças</h1><p class="intro">Edite o nome, a idade e a igreja de cada criança. Cadastre quantas crianças precisar.</p></div><span class="step-pill">Cadastro sem limite</span></div>
-      <section class="panel roster-panel"><div class="panel-heading"><div><p class="eyebrow">DADOS DO GRUPO</p><h2>Cadastro das crianças</h2></div><div class="roster-actions"><button class="secondary-button" type="button" id="toggle-archived-children" aria-pressed="false">Ver crianças arquivadas</button><button class="add-child-button" type="button" id="add-child">+ Adicionar criança</button></div></div><p class="roster-hint">Cadastre quantas crianças precisar. Preencha os dados e salve cada criança no botão da própria linha. Arquivar preserva missões e pontos; excluir remove o progresso definitivamente.</p><div id="children-editor" class="children-editor"></div><datalist id="church-options"></datalist><p id="children-feedback" class="form-feedback" role="status" aria-live="polite"></p></section>
+      <section class="panel roster-panel"><div class="panel-heading"><div><p class="eyebrow">DADOS DO GRUPO</p><h2>Cadastro das crianças</h2></div><div class="roster-actions"><label class="roster-search"><input id="children-roster-search" type="search" aria-label="Pesquisar criança por nome, idade, igreja ou número" placeholder="Pesquisar criança" autocomplete="off"></label><button class="secondary-button" type="button" id="toggle-archived-children" aria-pressed="false">Ver crianças arquivadas</button><button class="add-child-button" type="button" id="add-child">+ Adicionar criança</button></div></div><p class="roster-hint">Cadastre quantas crianças precisar. Preencha os dados e salve cada criança no botão da própria linha. Arquivar preserva missões e pontos; excluir remove o progresso definitivamente.</p><div id="children-editor" class="children-editor"></div><p id="children-search-empty" class="empty-state children-search-empty" role="status" aria-live="polite" hidden>Nenhuma criança encontrada.</p><datalist id="church-options"></datalist><p id="children-feedback" class="form-feedback" role="status" aria-live="polite"></p></section>
     </section>
     <section id="view-progress" class="app-view" hidden>
       <div class="welcome-row"><div><p class="eyebrow">ACOMPANHAMENTO INDIVIDUAL</p><h1>Progresso das crianças</h1><p class="intro">Veja as conquistas de cada criança por categoria.</p></div><span class="step-pill">4 categorias</span></div>
@@ -228,6 +228,6 @@
   <div id="toast" class="toast" role="status" aria-live="polite"></div>
   <script src="cloud-config.js?v=20261116-1" defer></script>
   <script src="cloud-sync.js?v=20261116-3" defer></script>
-  <script src="app.js?v=20261116-4" defer></script>
+  <script src="app.js?v=20261116-5" defer></script>
 </body>
 </html>
