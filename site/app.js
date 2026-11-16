@@ -38,6 +38,7 @@ let toastTimer;
 let urlsMomentos = [];
 let mostrarCriancasArquivadas = false;
 let instrutorEditandoId = "";
+let edicoesPendentesCadastro = new Map();
 
 function lerRegistros() { try { return JSON.parse(localStorage.getItem(CHAVE) || "[]"); } catch { return []; } }
 function lerDescricoes() { try { return JSON.parse(localStorage.getItem(CHAVE_DESCRICOES) || "{}"); } catch { return {}; } }
@@ -45,7 +46,10 @@ function lerPontosExtras() { try { const lista = JSON.parse(localStorage.getItem
 function lerInstrutores() { try { const lista = JSON.parse(localStorage.getItem(CHAVE_INSTRUTORES) || "[]"); return Array.isArray(lista) ? lista : []; } catch { return []; } }
 function salvarPontosExtras() { localStorage.setItem(CHAVE_PONTOS_EXTRAS, JSON.stringify(pontosExtras)); agendarSincronizacao(); }
 function salvarInstrutores() { localStorage.setItem(CHAVE_INSTRUTORES, JSON.stringify(instrutores)); }
-function agendarSincronizacao() { NUVEM?.scheduleSync(); }
+function agendarSincronizacao() {
+  if (NUVEM?.lerSessao()?.access_token) definirStatusSincronizacao("pending", "Salvo neste aparelho · aguardando envio", "A sincronização com a equipe será feita em instantes.");
+  NUVEM?.scheduleSync();
+}
 function ehInstrutorPrincipal() { return usuarioAtual?.papel === "principal"; }
 function nomeDaConta(conta) {
   const valor = typeof conta === "string" ? conta : conta?.name ?? conta?.nome ?? conta?.display_name ?? conta?.full_name ?? conta?.user_metadata?.name ?? conta?.member?.name ?? "";
@@ -167,7 +171,22 @@ async function carregarEquipeRemota(codigo) {
   } finally { botao.disabled = false; botao.textContent = "Carregar nomes"; }
 }
 function aplicarDadosDaNuvem() {
+  const edicoesPendentes = CRIANCAS.map(crianca => {
+    const valores = {
+      nome: (document.querySelector(`[data-child-name="${crianca.id}"]`)?.value ?? crianca.nome).trim(),
+      idade: Number(document.querySelector(`[data-child-age="${crianca.id}"]`)?.value ?? crianca.idade),
+      igreja: (document.querySelector(`[data-child-church="${crianca.id}"]`)?.value ?? crianca.igreja).trim(),
+      categoriaRepresentativa: document.querySelector(`[data-child-category="${crianca.id}"]`)?.value ?? crianca.categoriaRepresentativa
+    };
+    const alterada = crianca.nova || edicoesPendentesCadastro.has(crianca.id) || Object.keys(valores).some(chave => valores[chave] !== crianca[chave]);
+    return alterada ? { ...crianca, ...valores } : null;
+  }).filter(Boolean);
   registros = lerRegistros(); pontosExtras = lerPontosExtras(); CRIANCAS = lerCriancas(); CATALOGO = lerCatalogo();
+  edicoesPendentes.forEach(edicao => {
+    const indice = CRIANCAS.findIndex(crianca => crianca.id === edicao.id);
+    if (indice >= 0) CRIANCAS[indice] = edicao;
+    else CRIANCAS.push(edicao);
+  });
   renderizarListaInstrutores(); renderizarCriancas(document.querySelector("#child-search").value);
   renderizarCategorias(); renderizarMissoes(); renderizarDescricaoMissao(); renderizarResumo(); renderizarRegistros();
   renderizarProgresso(document.querySelector("#progress-search").value); renderizarPodio(); renderizarHome(); renderizarMomentos();
@@ -204,7 +223,7 @@ function abrirSessao(instrutor) {
   renderizarDescricaoMissao(); renderizarEditorMissoes(); renderizarHome(); renderizarMomentos();
   if (conectado && navigator.onLine) {
     NUVEM.carregarMembrosAutenticados().then(lista => { membrosRemotos = lista || []; renderizarEquipe(); renderizarListaInstrutores(); }).catch(() => {});
-    NUVEM.sync().catch(() => {});
+    sincronizarEmSegundoPlano();
   }
 }
 async function criarContaInstrutor(nome, senha, papel) {
@@ -377,7 +396,7 @@ async function entrarInstrutor(evento) {
       else localStorage.removeItem(CHAVE_LOGIN_AUTOMATICO);
       membrosRemotos = await NUVEM.carregarMembrosAutenticados().catch(() => resultado.members || []);
       abrirSessao(conta);
-      NUVEM.sync().catch(erro => { document.querySelector("#sync-status").lastElementChild.textContent = "Aguardando sincronização"; });
+      sincronizarEmSegundoPlano();
       return;
     } catch (erro) { status.textContent = erro?.message || "Não foi possível entrar na equipe."; return; }
   }
@@ -518,11 +537,10 @@ function renderizarCadastroCriancas() {
   const alternar = document.querySelector("#toggle-archived-children");
   alternar.textContent = mostrarCriancasArquivadas ? "Ver crianças ativas" : `Ver arquivadas (${CRIANCAS.filter(crianca => crianca.arquivada).length})`;
   alternar.setAttribute("aria-pressed", String(mostrarCriancasArquivadas));
-  editor.innerHTML = exibidas.length ? exibidas.map(crianca => `<div class="child-edit-row ${crianca.nova ? "new-child-row" : ""} ${crianca.arquivada ? "archived-child-row" : ""}"><span class="child-edit-number">#${crianca.id.slice(-2)}</span><label class="child-name-field"><span>Nome</span><input type="text" maxlength="70" data-child-name="${crianca.id}" value="${escapar(crianca.nome)}" placeholder="Nome da criança"></label><label class="child-age-field"><span>Idade</span><select data-child-age="${crianca.id}"><option value="" disabled ${crianca.idade ? "" : "selected"}>Selecione</option>${Array.from({ length: 7 }, (_, i) => `<option value="${i + 6}" ${crianca.idade === i + 6 ? "selected" : ""}>${i + 6} anos</option>`).join("")}</select></label><label class="child-church-field"><span>Igreja</span><input type="text" maxlength="100" data-child-church="${crianca.id}" value="${escapar(crianca.igreja)}" placeholder="Nome da igreja"></label><label class="child-category-field"><span>Categoria representativa</span><select data-child-category="${crianca.id}"><option value="">Sem categoria</option>${CATEGORIAS.map(categoria => `<option value="${categoria.id}" ${crianca.categoriaRepresentativa === categoria.id ? "selected" : ""}>${categoria.nome}</option>`).join("")}</select></label>${crianca.nova ? `<button type="button" class="remove-child-button" data-remove-child="${crianca.id}">Cancelar</button>` : `<div class="child-row-actions">${crianca.arquivada ? `<button type="button" class="secondary-button child-roster-action" data-restore-child="${crianca.id}">Restaurar</button>` : `<button type="button" class="remove-child-button child-roster-action" data-archive-child="${crianca.id}">Arquivar</button>`}<button type="button" class="delete-child-button" data-delete-child="${crianca.id}" aria-label="Excluir definitivamente ${escapar(nomeCrianca(crianca))}">Excluir</button></div>`}</div>`).join("") : `<div class="empty-state"><span aria-hidden="true">♙</span><p>${mostrarCriancasArquivadas ? "Nenhuma criança arquivada." : "Nenhuma criança ativa cadastrada ainda. Use “Adicionar criança” para começar."}</p></div>`;
+  editor.innerHTML = exibidas.length ? exibidas.map(crianca => `<div class="child-edit-row ${crianca.nova ? "new-child-row" : ""} ${edicoesPendentesCadastro.has(crianca.id) ? "unsaved-child-row" : ""} ${crianca.arquivada ? "archived-child-row" : ""}"><span class="child-edit-number">#${crianca.id.slice(-2)}</span><label class="child-name-field"><span>Nome</span><input type="text" maxlength="70" data-child-name="${crianca.id}" value="${escapar(crianca.nome)}" placeholder="Nome da criança"></label><label class="child-age-field"><span>Idade</span><select data-child-age="${crianca.id}"><option value="" disabled ${crianca.idade ? "" : "selected"}>Selecione</option>${Array.from({ length: 7 }, (_, i) => `<option value="${i + 6}" ${crianca.idade === i + 6 ? "selected" : ""}>${i + 6} anos</option>`).join("")}</select></label><label class="child-church-field"><span>Igreja</span><input type="text" maxlength="100" data-child-church="${crianca.id}" value="${escapar(crianca.igreja)}" placeholder="Nome da igreja"></label><label class="child-category-field"><span>Categoria representativa</span><select data-child-category="${crianca.id}"><option value="">Sem categoria</option>${CATEGORIAS.map(categoria => `<option value="${categoria.id}" ${crianca.categoriaRepresentativa === categoria.id ? "selected" : ""}>${categoria.nome}</option>`).join("")}</select></label><div class="child-row-actions"><button type="button" class="primary-button child-row-save" data-save-child="${crianca.id}">${edicoesPendentesCadastro.has(crianca.id) ? "Salvar alterações" : "Salvar criança"}</button>${crianca.nova ? `<button type="button" class="remove-child-button" data-remove-child="${crianca.id}">Cancelar</button>` : `${crianca.arquivada ? `<button type="button" class="secondary-button child-roster-action" data-restore-child="${crianca.id}">Restaurar</button>` : `<button type="button" class="remove-child-button child-roster-action" data-archive-child="${crianca.id}">Arquivar</button>`}<button type="button" class="delete-child-button" data-delete-child="${crianca.id}" aria-label="Excluir definitivamente ${escapar(nomeCrianca(crianca))}">Excluir</button>`}</div></div>`).join("") : `<div class="empty-state"><span aria-hidden="true">♙</span><p>${mostrarCriancasArquivadas ? "Nenhuma criança arquivada." : "Nenhuma criança ativa cadastrada ainda. Use “Adicionar criança” para começar."}</p></div>`;
   document.querySelectorAll("[data-child-church]").forEach(campo => campo.setAttribute("list", "church-options"));
   renderizarListaIgrejas();
   document.querySelector("#add-child").disabled = CRIANCAS.filter(crianca => !crianca.arquivada).length >= LIMITE_CRIANCAS;
-  document.querySelector("#save-children").disabled = !CRIANCAS.length;
   renderizarCriancas(document.querySelector("#child-search").value);
 }
 function adicionarCrianca() {
@@ -573,6 +591,7 @@ function excluirCriancaDefinitivamente(id) {
   try {
     persistir(criancasNovas, registrosNovos, extrasNovos);
     CRIANCAS = criancasNovas; registros = registrosNovos; pontosExtras = extrasNovos;
+    edicoesPendentesCadastro.delete(id);
     agendarSincronizacao();
     if (criancaSelecionada === id) cancelarEdicaoRegistro("Criança excluída.");
     renderizarCadastroCriancas(); renderizarCriancas(document.querySelector("#child-search").value);
@@ -587,6 +606,7 @@ function excluirCriancaDefinitivamente(id) {
 function cancelarNovaCrianca(id) {
   const crianca = CRIANCAS.find(item => item.id === id);
   if (!crianca?.nova) return;
+  edicoesPendentesCadastro.delete(id);
   CRIANCAS = CRIANCAS.filter(item => item.id !== id);
   if (criancaNovaId === id) { criancaNovaId = ""; retornarAosRegistros = false; }
   renderizarCadastroCriancas();
@@ -598,47 +618,60 @@ function renderizarListaIgrejas() {
   document.querySelectorAll("[data-child-church]").forEach(campo => adicionar(campo.value));
   document.querySelector("#church-options").innerHTML = [...nomes.values()].sort((a, b) => a.localeCompare(b, "pt-BR")).map(nome => `<option value="${escapar(nome)}"></option>`).join("");
 }
-function salvarCadastroCriancas() {
-  const valores = CRIANCAS.map(crianca => ({
-    crianca,
-    nome: (document.querySelector(`[data-child-name="${crianca.id}"]`)?.value ?? crianca.nome).trim(),
-    idade: Number(document.querySelector(`[data-child-age="${crianca.id}"]`)?.value ?? crianca.idade),
-    igreja: (document.querySelector(`[data-child-church="${crianca.id}"]`)?.value ?? crianca.igreja).trim(),
-    categoriaRepresentativa: document.querySelector(`[data-child-category="${crianca.id}"]`)?.value ?? crianca.categoriaRepresentativa
-  }));
-  const semNome = valores.find(item => !item.nome);
-  if (semNome) {
-    document.querySelector("#children-feedback").textContent = "Informe o nome de cada criança antes de salvar.";
-    document.querySelector(`[data-child-name="${semNome.crianca.id}"]`).focus();
+function salvarCadastroCriancas(id) {
+  const alvo = CRIANCAS.find(crianca => crianca.id === id);
+  if (!alvo) return;
+  const dadosAlvo = {
+    nome: (document.querySelector(`[data-child-name="${id}"]`)?.value ?? alvo.nome).trim(),
+    idade: Number(document.querySelector(`[data-child-age="${id}"]`)?.value ?? alvo.idade),
+    igreja: (document.querySelector(`[data-child-church="${id}"]`)?.value ?? alvo.igreja).trim(),
+    categoriaRepresentativa: document.querySelector(`[data-child-category="${id}"]`)?.value ?? alvo.categoriaRepresentativa
+  };
+  if (!dadosAlvo.nome) {
+    document.querySelector("#children-feedback").textContent = "Informe o nome desta criança antes de salvar.";
+    document.querySelector(`[data-child-name="${id}"]`).focus();
     return;
   }
-  const idadeInvalida = valores.find(item => item.idade < 6 || item.idade > 12);
-  if (idadeInvalida) {
-    document.querySelector("#children-feedback").textContent = "Escolha uma idade entre 6 e 12 anos para cada criança.";
-    document.querySelector(`[data-child-age="${idadeInvalida.crianca.id}"]`).focus();
+  if (dadosAlvo.idade < 6 || dadosAlvo.idade > 12) {
+    document.querySelector("#children-feedback").textContent = "Escolha uma idade entre 6 e 12 anos para esta criança.";
+    document.querySelector(`[data-child-age="${id}"]`).focus();
     return;
   }
-  const persistidas = valores.map(({ crianca, ...dados }) => {
-    const { nova, ...existente } = crianca;
-    return { ...existente, ...dados };
+  const rowsAtualizadas = CRIANCAS.map(crianca => {
+    const valoresDaLinha = {
+      nome: (document.querySelector(`[data-child-name="${crianca.id}"]`)?.value ?? crianca.nome).trim(),
+      idade: Number(document.querySelector(`[data-child-age="${crianca.id}"]`)?.value ?? crianca.idade),
+      igreja: (document.querySelector(`[data-child-church="${crianca.id}"]`)?.value ?? crianca.igreja).trim(),
+      categoriaRepresentativa: document.querySelector(`[data-child-category="${crianca.id}"]`)?.value ?? crianca.categoriaRepresentativa
+    };
+    const atualizada = { ...crianca, ...valoresDaLinha };
+    if (crianca.id === id) delete atualizada.nova;
+    return atualizada;
   });
+  const atualizacaoAlvo = rowsAtualizadas.find(crianca => crianca.id === id);
+  const persistidas = lerCriancas();
+  const indiceAlvo = persistidas.findIndex(crianca => crianca.id === id);
+  const { nova, ...criancaSalva } = atualizacaoAlvo;
+  if (indiceAlvo >= 0) persistidas[indiceAlvo] = criancaSalva;
+  else persistidas.push(criancaSalva);
   try {
     localStorage.setItem(CHAVE_CRIANCAS, JSON.stringify(persistidas));
     const confirmacao = JSON.parse(localStorage.getItem(CHAVE_CRIANCAS) || "null");
-    if (!Array.isArray(confirmacao) || confirmacao.length !== persistidas.length) throw new Error("A gravação não foi confirmada.");
+    if (!Array.isArray(confirmacao) || !confirmacao.some(crianca => crianca.id === id && crianca.nome === dadosAlvo.nome)) throw new Error("A gravação não foi confirmada.");
   } catch {
-    document.querySelector("#children-feedback").textContent = "Não foi possível confirmar o salvamento. Confira os campos e tente novamente; seus dados continuam preenchidos.";
+    document.querySelector("#children-feedback").textContent = "Não foi possível confirmar o salvamento desta criança. Os dados continuam preenchidos; tente novamente.";
     return;
   }
-  CRIANCAS = persistidas;
-  const idRecemCadastrada = criancaNovaId;
-  criancaNovaId = "";
+  const retornarAosRegistrosAgora = retornarAosRegistros && criancaNovaId === id;
+  edicoesPendentesCadastro.delete(id);
+  CRIANCAS = rowsAtualizadas;
+  criancaNovaId = CRIANCAS.find(crianca => crianca.nova)?.id || "";
   agendarSincronizacao();
   renderizarCadastroCriancas(); renderizarCriancas(document.querySelector("#child-search").value);
   renderizarProgresso(document.querySelector("#progress-search").value);
-  document.querySelector("#children-feedback").textContent = `${persistidas.length} ${persistidas.length === 1 ? "cadastro salvo" : "cadastros salvos"} neste aparelho.`;
-  if (retornarAosRegistros && idRecemCadastrada) {
-    const novaCrianca = CRIANCAS.find(crianca => crianca.id === idRecemCadastrada);
+  document.querySelector("#children-feedback").textContent = `${dadosAlvo.nome} foi salva neste aparelho.${NUVEM?.lerSessao()?.access_token ? " A sincronização com a equipe está pendente." : ""}`;
+  if (retornarAosRegistrosAgora) {
+    const novaCrianca = CRIANCAS.find(crianca => crianca.id === id);
     retornarAosRegistros = false;
     if (novaCrianca) {
       mostrarArea("view-dashboard"); criancaSelecionada = novaCrianca.id;
@@ -923,8 +956,39 @@ function excluirRegistroEditando() {
 function atualizarEstadoRede() {
   const online = navigator.onLine;
   const sessao = NUVEM?.lerSessao();
-  const label = !online ? "Offline · alterações guardadas neste aparelho" : sessao?.access_token ? "Conectado à equipe" : "Salvo neste aparelho";
-  document.querySelector("#sync-status").innerHTML = `<i style="background:${online && sessao?.access_token ? "#74ad79" : "#d49a46"}"></i><span>${label}</span>`;
+  if (!online) definirStatusSincronizacao("offline", "Sem conexão", "As alterações continuam guardadas neste aparelho e serão enviadas quando a internet voltar.");
+  else if (sessao?.access_token) definirStatusSincronizacao("ready", "Conectado à equipe", "Use “Sincronizar agora” para enviar e receber os dados imediatamente.");
+  else definirStatusSincronizacao("local", "Somente neste aparelho", "Entre na equipe para compartilhar os dados com os outros aparelhos.");
+}
+function definirStatusSincronizacao(estado, rotulo, detalhe, feedback = "") {
+  const badge = document.querySelector("#sync-state-badge");
+  const title = document.querySelector("#sync-center-title");
+  const description = document.querySelector("#sync-center-detail");
+  const message = document.querySelector("#sync-center-feedback");
+  const topStatus = document.querySelector("#sync-status");
+  if (badge) { badge.dataset.state = estado; document.querySelector("#sync-state-label").textContent = rotulo; }
+  if (title) title.textContent = estado === "syncing" ? "Sincronização em andamento" : estado === "synced" ? "Dados atualizados" : estado === "error" ? "Sincronização não concluída" : "Sincronização do grupo";
+  if (description) description.textContent = detalhe;
+  if (message) { message.textContent = feedback; message.hidden = !feedback; }
+  if (topStatus) {
+    topStatus.dataset.state = estado;
+    topStatus.querySelector("span").textContent = rotulo;
+    topStatus.querySelector("i").style.background = estado === "synced" ? "#74ad79" : estado === "syncing" ? "#d2ad58" : "#d49a46";
+  }
+  const botao = document.querySelector("#sync-now");
+  if (botao) { botao.disabled = estado === "syncing"; botao.setAttribute("aria-busy", String(estado === "syncing")); }
+}
+function sincronizarEmSegundoPlano() {
+  if (!NUVEM?.configurado() || !NUVEM?.lerSessao()?.access_token || !navigator.onLine) return Promise.resolve({ synced: false, pending: true });
+  definirStatusSincronizacao("syncing", "Sincronizando…", "Enviando e recebendo dados da equipe.");
+  return NUVEM.sync().then(resultado => {
+    if (resultado?.synced) definirStatusSincronizacao("synced", "Sincronizado com a equipe", "Este aparelho e os demais estão com crianças, missões, registros e pontos atualizados.");
+    else definirStatusSincronizacao("pending", "Aguardando sincronização", "Os dados permanecem salvos neste aparelho até a próxima conexão.");
+    return resultado;
+  }).catch(erro => {
+    definirStatusSincronizacao("error", "Aguardando sincronização", "Os dados continuam salvos neste aparelho. Tente novamente quando a conexão estiver estável.");
+    throw erro;
+  });
 }
 function aplicarTema(tema) {
   const escuro = tema === "escuro";
@@ -972,9 +1036,8 @@ document.querySelector("#home-open-progress").addEventListener("click", () => mo
 document.querySelector("#add-memories-button").addEventListener("click", () => document.querySelector("#memories-input").click());
 document.querySelector("#memories-input").addEventListener("change", evento => { if (evento.target.files?.length) salvarArquivosDeMomentos([...evento.target.files]); });
 document.querySelector("#memories-gallery").addEventListener("click", evento => { const botao = evento.target.closest("[data-delete-memory]"); if (botao) removerMomento(botao.dataset.deleteMemory); });
-document.querySelector("#save-children").addEventListener("click", salvarCadastroCriancas);
 document.querySelector("#add-child").addEventListener("click", () => adicionarCrianca());
-document.querySelector("#children-editor").addEventListener("click", e => { const botao = e.target.closest("[data-remove-child]"); if (botao) cancelarNovaCrianca(botao.dataset.removeChild); });
+document.querySelector("#children-editor").addEventListener("click", e => { const salvar = e.target.closest("[data-save-child]"); const cancelar = e.target.closest("[data-remove-child]"); if (salvar) salvarCadastroCriancas(salvar.dataset.saveChild); else if (cancelar) cancelarNovaCrianca(cancelar.dataset.removeChild); });
 document.querySelector("#children-editor").addEventListener("click", e => { const arquivar = e.target.closest("[data-archive-child]"); const restaurar = e.target.closest("[data-restore-child]"); const excluir = e.target.closest("[data-delete-child]"); if (arquivar) definirArquivoCrianca(arquivar.dataset.archiveChild, true); else if (restaurar) definirArquivoCrianca(restaurar.dataset.restoreChild, false); else if (excluir) excluirCriancaDefinitivamente(excluir.dataset.deleteChild); });
 document.querySelector("#toggle-archived-children").addEventListener("click", () => { mostrarCriancasArquivadas = !mostrarCriancasArquivadas; renderizarCadastroCriancas(); });
 document.querySelector("#add-child-from-record").addEventListener("click", () => {
@@ -982,6 +1045,22 @@ document.querySelector("#add-child-from-record").addEventListener("click", () =>
   retornarAosRegistros = true; mostrarArea("view-children"); adicionarCrianca();
 });
 document.querySelector("#children-editor").addEventListener("input", e => { if (e.target.closest("[data-child-church]")) renderizarListaIgrejas(); });
+function indicarAlteracaoNoCadastro(e) {
+  const linha = e.target.closest(".child-edit-row");
+  if (!linha) return;
+  linha.classList.add("unsaved-child-row");
+  const botaoSalvar = linha.querySelector("[data-save-child]");
+  if (botaoSalvar && !linha.classList.contains("new-child-row")) botaoSalvar.textContent = "Salvar alterações";
+  const id = botaoSalvar?.dataset.saveChild || linha.querySelector("[data-remove-child]")?.dataset.removeChild;
+  if (id) edicoesPendentesCadastro.set(id, {
+    nome: document.querySelector(`[data-child-name="${id}"]`)?.value.trim() || "",
+    idade: Number(document.querySelector(`[data-child-age="${id}"]`)?.value),
+    igreja: document.querySelector(`[data-child-church="${id}"]`)?.value.trim() || "",
+    categoriaRepresentativa: document.querySelector(`[data-child-category="${id}"]`)?.value || ""
+  });
+}
+document.querySelector("#children-editor").addEventListener("input", indicarAlteracaoNoCadastro);
+document.querySelector("#children-editor").addEventListener("change", indicarAlteracaoNoCadastro);
 document.querySelector("#missions-editor").addEventListener("click", e => { const botao = e.target.closest("[data-save-mission]"); if (botao) salvarMissao(botao.dataset.category, botao.dataset.saveMission); });
 document.querySelector("#recent-list").addEventListener("click", e => { const botao = e.target.closest("[data-edit-record]"); if (botao) iniciarEdicaoRegistro(botao.dataset.editRecord); });
 document.querySelector("#cancel-edit").addEventListener("click", cancelarEdicaoRegistro);
@@ -1011,10 +1090,28 @@ document.querySelector("#copy-team-code").addEventListener("click", async () => 
 });
 window.addEventListener("pc-cloud-updated", aplicarDadosDaNuvem);
 window.addEventListener("pc-cloud-synced", () => {
-  document.querySelector("#sync-status").innerHTML = `<i style="background:#74ad79"></i><span>Sincronizado com a equipe</span>`;
+  definirStatusSincronizacao("synced", "Sincronizado com a equipe", "Este aparelho e os demais estão com crianças, missões, registros e pontos atualizados.");
 });
 window.addEventListener("pc-cloud-sync-error", () => {
-  document.querySelector("#sync-status").innerHTML = `<i style="background:#d49a46"></i><span>Salvo neste aparelho · aguardando sincronização</span>`;
+  definirStatusSincronizacao("error", "Aguardando sincronização", "Os dados continuam salvos neste aparelho. Tente novamente quando a conexão estiver estável.");
+});
+document.querySelector("#sync-now").addEventListener("click", async () => {
+  if (!navigator.onLine) {
+    definirStatusSincronizacao("offline", "Sem conexão", "As alterações continuam guardadas neste aparelho e serão enviadas quando a internet voltar.", "Conecte-se à internet para sincronizar agora.");
+    return;
+  }
+  if (!NUVEM?.configurado() || !NUVEM?.lerSessao()?.access_token) {
+    definirStatusSincronizacao("local", "Somente neste aparelho", "Entre na equipe para compartilhar os dados com os outros aparelhos.", "A sincronização entre aparelhos requer uma conta da equipe conectada.");
+    return;
+  }
+  definirStatusSincronizacao("syncing", "Sincronizando…", "Enviando e recebendo crianças, missões, registros e pontos.");
+  try {
+    const resultado = await NUVEM.sync();
+    if (resultado?.synced) definirStatusSincronizacao("synced", "Sincronizado com a equipe", "Este aparelho e os demais estão com crianças, missões, registros e pontos atualizados.");
+    else definirStatusSincronizacao("pending", "Aguardando sincronização", "Os dados permanecem salvos neste aparelho e serão enviados quando a conexão estiver disponível.");
+  } catch {
+    definirStatusSincronizacao("error", "Aguardando sincronização", "Os dados continuam salvos neste aparelho. Tente novamente quando a conexão estiver estável.", "Não foi possível concluir a sincronização agora.");
+  }
 });
 document.querySelector("#logout-button").addEventListener("click", () => {
   localStorage.removeItem(CHAVE_LOGIN_AUTOMATICO);
@@ -1066,7 +1163,7 @@ document.querySelector("#record-form").addEventListener("submit", e => {
   criancaSelecionada = ""; categoriaSelecionada = ""; document.querySelector("#child-search").value = ""; document.querySelector("#mission-select").value = ""; renderizarCriancas(); renderizarCategorias(); renderizarMissoes(); renderizarDescricaoMissao();
 });
 document.querySelector("#show-records").addEventListener("click", () => document.querySelector(".recent-panel").scrollIntoView({ behavior: "smooth", block: "center" }));
-window.addEventListener("online", () => { atualizarEstadoRede(); NUVEM?.sync().catch(() => {}); }); window.addEventListener("offline", atualizarEstadoRede);
+window.addEventListener("online", () => { atualizarEstadoRede(); sincronizarEmSegundoPlano().catch(() => {}); }); window.addEventListener("offline", atualizarEstadoRede);
 if ("serviceWorker" in navigator && location.protocol.startsWith("http")) window.addEventListener("load", () => navigator.serviceWorker.register("./sw.js").catch(() => {}));
 const contaLembrada = instrutores.find(conta => conta.id === localStorage.getItem(CHAVE_LOGIN_AUTOMATICO));
 const hashArgs = new URLSearchParams(location.hash.replace(/^#/, ""));
@@ -1077,5 +1174,5 @@ else if (NUVEM?.lerCodigoEquipe() && navigator.onLine) {
   carregarEquipeRemota(NUVEM.lerCodigoEquipe());
 }
 setInterval(() => {
-  if (usuarioAtual && navigator.onLine && NUVEM?.lerSessao()?.access_token) NUVEM.sync().catch(() => {});
+  if (usuarioAtual && navigator.onLine && NUVEM?.lerSessao()?.access_token) sincronizarEmSegundoPlano().catch(() => {});
 }, 30000);
