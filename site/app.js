@@ -461,7 +461,8 @@ function iconeBordado(categoria, pequeno = false) {
 function renderizarCriancas(filtro = "") {
   const lista = document.querySelector("#child-list");
   const termo = filtro.trim().toLocaleLowerCase("pt-BR");
-  const cadastradas = CRIANCAS.filter(crianca => !crianca.nova && !crianca.arquivada);
+  const cadastradas = CRIANCAS.filter(crianca => !crianca.nova && !crianca.arquivada)
+    .sort((a, b) => Number(a.id.match(/(\d+)$/)?.[1] || 0) - Number(b.id.match(/(\d+)$/)?.[1] || 0));
   const totalCriancas = document.querySelector("#children-count");
   if (totalCriancas) totalCriancas.textContent = String(cadastradas.length);
   const atalhoAdicionar = document.querySelector("#add-child-from-record");
