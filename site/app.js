@@ -445,11 +445,18 @@ function registroDeCriancaVazioLegado(crianca) {
 function lerCatalogo() {
   let salvo = {};
   try { salvo = JSON.parse(localStorage.getItem(CHAVE_CATALOGO) || "{}"); } catch {}
-  return Object.fromEntries(CATEGORIAS.map(categoria => [categoria.id, Array.from({ length: 3 }, (_, i) => {
-    const padrao = { id: `${categoria.id}-missao-${i + 1}`, nome: `Missão ${i + 1}`, descricao: descricoes[`${categoria.id}::Missão ${i + 1}`] || "" };
-    const item = Array.isArray(salvo[categoria.id]) ? salvo[categoria.id][i] : null;
-    return item ? { ...padrao, nome: typeof item.nome === "string" && item.nome ? item.nome : padrao.nome, descricao: typeof item.descricao === "string" ? item.descricao : padrao.descricao } : padrao;
-  })]));
+  return Object.fromEntries(CATEGORIAS.map(categoria => {
+    const itensSalvos = Array.isArray(salvo[categoria.id]) ? salvo[categoria.id] : [];
+    const itensPorId = new Map(itensSalvos.filter(item => item && typeof item.id === "string").map(item => [item.id, item]));
+    const catalogoSemIds = itensSalvos.every(item => !item || typeof item.id !== "string");
+    const missoes = Array.from({ length: 3 }, (_, i) => {
+      const id = `${categoria.id}-missao-${i + 1}`;
+      const padrao = { id, nome: `Missão ${i + 1}`, descricao: descricoes[`${categoria.id}::Missão ${i + 1}`] || "" };
+      const item = itensPorId.get(id) || (catalogoSemIds ? itensSalvos[i] : null);
+      return item ? { ...padrao, nome: typeof item.nome === "string" && item.nome ? item.nome : padrao.nome, descricao: typeof item.descricao === "string" ? item.descricao : padrao.descricao } : padrao;
+    });
+    return [categoria.id, missoes];
+  }));
 }
 function salvarRegistros() { localStorage.setItem(CHAVE, JSON.stringify(registros)); agendarSincronizacao(); }
 function salvarCatalogo() { localStorage.setItem(CHAVE_CATALOGO, JSON.stringify(CATALOGO)); agendarSincronizacao(); }
@@ -698,21 +705,32 @@ function salvarCadastroCriancas(id) {
 function renderizarEditorMissoes() {
   const ehPrincipal = ehInstrutorPrincipal();
   document.querySelector("#mission-editor-role").textContent = ehPrincipal ? "Edição pela Conta 1" : "Somente leitura";
-  document.querySelector("#missions-editor").innerHTML = CATEGORIAS.map(categoria => `<section class="mission-category-panel"><div class="mission-category-heading"><span class="cat-icon">${iconeBordado(categoria, true)}</span><h2>${escapar(categoria.nome)}</h2></div><div class="mission-admin-grid">${(CATALOGO[categoria.id] || []).map((missao, indice) => `<article class="mission-admin-card"><p class="eyebrow">MISSÃO ${indice + 1}</p><label>Nome da missão<input type="text" maxlength="80" data-mission-name="${missao.id}" value="${escapar(missao.nome)}" ${ehPrincipal ? "" : "readonly"}></label><label>Descrição<textarea rows="3" maxlength="1200" data-mission-description="${missao.id}" ${ehPrincipal ? "" : "readonly"} placeholder="${ehPrincipal ? "Descreva os detalhes desta missão." : "Ainda sem descrição."}">${escapar(missao.descricao)}</textarea></label><button class="save-description-button" type="button" data-save-mission="${missao.id}" data-category="${categoria.id}" ${ehPrincipal ? "" : "disabled"}>Salvar missão</button></article>`).join("")}</div></section>`).join("");
+  document.querySelector("#missions-editor").innerHTML = CATEGORIAS.map(categoria => {
+    const missoes = (CATALOGO[categoria.id] || []).slice().sort((a, b) => Number(a.id.match(/-missao-(\d+)$/)?.[1] || 0) - Number(b.id.match(/-missao-(\d+)$/)?.[1] || 0));
+    return `<section class="mission-category-panel"><div class="mission-category-heading"><span class="cat-icon">${iconeBordado(categoria, true)}</span><h2>${escapar(categoria.nome)}</h2></div><div class="mission-admin-grid">${missoes.map((missao, indice) => `<article class="mission-admin-card"><p class="eyebrow">MISSÃO ${String(indice + 1).padStart(2, "0")}</p><label>Nome da missão<input type="text" maxlength="80" data-mission-name="${missao.id}" value="${escapar(missao.nome)}" ${ehPrincipal ? "" : "readonly"}></label><label>Descrição<textarea rows="3" maxlength="1200" data-mission-description="${missao.id}" ${ehPrincipal ? "" : "readonly"} placeholder="${ehPrincipal ? "Descreva os detalhes desta missão." : "Ainda sem descrição."}">${escapar(missao.descricao)}</textarea></label><button class="save-description-button" type="button" data-save-mission="${missao.id}" data-category="${categoria.id}" ${ehPrincipal ? "" : "disabled"}>Salvar missão</button></article>`).join("")}</div></section>`;
+  }).join("");
 }
 function salvarMissao(categoriaId, missaoId) {
   if (!ehInstrutorPrincipal()) return;
   const missao = (CATALOGO[categoriaId] || []).find(item => item.id === missaoId);
   if (!missao) return;
-  const novoNome = document.querySelector(`[data-mission-name="${missaoId}"]`).value.trim();
+  const campoNome = document.querySelector(`[data-mission-name="${missaoId}"]`);
+  const campoDescricao = document.querySelector(`[data-mission-description="${missaoId}"]`);
+  const novoNome = campoNome.value.trim();
   if (!novoNome) { document.querySelector("#missions-feedback").textContent = "Informe um nome para a missão."; return; }
+  const nomeAnterior = missao.nome;
+  const descricaoAnterior = missao.descricao;
   missao.nome = novoNome;
-  missao.descricao = document.querySelector(`[data-mission-description="${missaoId}"]`).value.trim();
+  missao.descricao = campoDescricao.value.trim();
   try {
     salvarCatalogo();
-    renderizarEditorMissoes(); renderizarMissoes(); renderizarDescricaoMissao();
+    renderizarMissoes(); renderizarDescricaoMissao();
     document.querySelector("#missions-feedback").textContent = "Nome e descrição da missão salvos neste aparelho.";
-  } catch { document.querySelector("#missions-feedback").textContent = "Não foi possível salvar esta missão neste aparelho."; }
+  } catch {
+    missao.nome = nomeAnterior;
+    missao.descricao = descricaoAnterior;
+    document.querySelector("#missions-feedback").textContent = "Não foi possível salvar esta missão neste aparelho.";
+  }
 }
 function mostrarArea(id) {
   if (id === "view-team" && !ehInstrutorPrincipal()) { mostrarToast("A aba Equipe é exclusiva da Conta principal."); return; }
