@@ -449,10 +449,14 @@ function lerCatalogo() {
     const itensSalvos = Array.isArray(salvo[categoria.id]) ? salvo[categoria.id] : [];
     const itensPorId = new Map(itensSalvos.filter(item => item && typeof item.id === "string").map(item => [item.id, item]));
     const catalogoSemIds = itensSalvos.every(item => !item || typeof item.id !== "string");
+    // Corrige catálogos antigos em que a sincronização trocou apenas os nomes padrão entre posições.
+    const numerosDeNome = itensSalvos.map(item => /^Missão ([1-3])$/i.exec(item?.nome || "")?.[1] || "");
+    const nomesPadraoTrocados = itensSalvos.length === 3 && numerosDeNome.slice().sort().join("") === "123";
     const missoes = Array.from({ length: 3 }, (_, i) => {
       const id = `${categoria.id}-missao-${i + 1}`;
       const padrao = { id, nome: `Missão ${i + 1}`, descricao: descricoes[`${categoria.id}::Missão ${i + 1}`] || "" };
-      const item = itensPorId.get(id) || (catalogoSemIds ? itensSalvos[i] : null);
+      const itemPorNome = nomesPadraoTrocados ? itensSalvos.find(item => new RegExp(`^Missão ${i + 1}$`, "i").test(item?.nome || "")) : null;
+      const item = itemPorNome || itensPorId.get(id) || (catalogoSemIds ? itensSalvos[i] : null);
       return item ? { ...padrao, nome: typeof item.nome === "string" && item.nome ? item.nome : padrao.nome, descricao: typeof item.descricao === "string" ? item.descricao : padrao.descricao } : padrao;
     });
     return [categoria.id, missoes];
