@@ -529,6 +529,9 @@ function renderizarDescricaoMissao() {
     missao.descricao = area.querySelector("#mission-description").value.trim();
     try {
       salvarCatalogo();
+      // Mantém a lista administrativa de missões sincronizada com a edição
+      // feita diretamente na tela de registro de pontos.
+      renderizarEditorMissoes();
       area.querySelector("#description-status").textContent = "Descrição salva neste aparelho.";
       area.querySelector("#description-status").classList.add("saved");
     } catch {
